@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Data Entry — Klement's</title>
+<style>
+  :root {
+    --navy:       #0D1B2A;
+    --navy-mid:   #162436;
+    --navy-light: #1E3348;
+    --border:     #2E4D6A;
+    --text:       #E8EFF6;
+    --text-sub:   #7FA8C8;
+    --text-muted: #3D6080;
+    --bg:         #0F1E2E;
+    --surface:    #162436;
+    --surface2:   #1E3348;
+    --red:        #D4232E;
+    --red-dim:    rgba(212,35,46,0.14);
+    --gold:       #D4A017;
+    --gold-dim:   rgba(212,160,23,0.14);
+    --gold-light: rgba(212,160,23,0.07);
+    --blue:       #1D6A96;
+    --blue-dim:   rgba(29,106,150,0.14);
+    --blue-light: rgba(29,106,150,0.07);
+    --teal:       #0F6E56;
+    --teal-dim:   rgba(15,110,86,0.14);
+    --teal-light: rgba(15,110,86,0.07);
+    --green:      #34D399;
+    --green-dim:  rgba(52,211,153,0.12);
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'SF Mono', 'Fira Code', monospace;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  body::before {
+    content: '';
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg, var(--red) 0%, var(--gold) 40%, var(--blue) 70%, var(--teal) 100%);
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 200;
+  }
+
+  /* ── HEADER ─────────────────────────────────────────────── */
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 16px 18px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+
+  .logo-mark {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--red), #A01820);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 900; color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(212,35,46,0.3);
+  }
+
+  .header-brand { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
+  .header-title { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
+
+  .live-badge {
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(52,211,153,0.1);
+    border: 1px solid rgba(52,211,153,0.25);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 10px; font-weight: 700;
+    color: var(--green);
+    letter-spacing: 0.06em;
+  }
+  .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── TIMESTAMP ──────────────────────────────────────────── */
+  .timestamp-bar { max-width: 520px; margin: 10px auto 0; padding: 0 16px; }
+  .timestamp-inner {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 14px; font-size: 12px;
+    color: var(--text-sub); display: flex; align-items: center; gap: 6px;
+  }
+  .ts-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: pulse 2s infinite; }
+
+  /* ── MODULE SELECTOR ────────────────────────────────────── */
+  .module-selector { max-width: 520px; margin: 14px auto 0; padding: 0 16px; }
+  .module-label-row { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+
+
+  .module-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+    -webkit-user-select: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .module-card:hover { border-color: var(--navy-border); background: var(--surface2); }  .module-card:active { transform: scale(0.97); }
+
+  .module-card.active-waste     { border-color: var(--red);  background: rgba(212,35,46,0.06);  }
+  .module-card.active-downtime  { border-color: var(--gold); background: rgba(212,160,23,0.06); }
+  .module-card.active-giveaway  { border-color: var(--blue); background: rgba(29,106,150,0.06); }
+  .module-card.active-repack    { border-color: var(--teal); background: rgba(15,110,86,0.06);  }
+  .module-card.active-pounds    { border-color: #38BDF8;    background: rgba(56,189,248,0.06); }
+
+  .module-card-icon { font-size: 22px; }
+  .module-card-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .module-card-sub   { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+  .module-card.active-waste     .module-card-title { color: var(--red);  }
+  .module-card.active-downtime  .module-card-title { color: var(--gold); }
+  .module-card.active-giveaway  .module-card-title { color: #38BDF8;     }
+  .module-card.active-repack    .module-card-title { color: #34D399;     }
+  .module-card.active-pounds    .module-card-title { color: #38BDF8;     }
+
+  /* ── FORM PANELS ────────────────────────────────────────── */
+  .form-panel { display: none; max-width: 520px; margin: 0 auto; padding: 0 16px; }
+  .form-panel.visible { display: block; }
+
+  .panel-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 16px 0 12px;
+  }
+  .panel-divider-line { flex: 1; height: 1px; background: var(--border); }
+  .panel-divider-label { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+
+  /* ── SHARED FIELD STYLES ────────────────────────────────── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.18); margin-bottom: 10px; }
+  .field { padding: 11px 14px; border-bottom: 1px solid rgba(46,77,106,0.45); }
+  .field:last-child { border-bottom: none; }
+  .field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .req { color: var(--red); margin-left: 2px; }
+
+  select, input[type="text"], input[type="number"] {
+    width: 100%; height: 48px;
+    font-family: var(--font); font-size: 16px;
+    color: var(--text); background: var(--surface2);
+    border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 0 14px; outline: none;
+    -webkit-appearance: none; appearance: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237FA8C8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-color: var(--surface2); padding-right: 40px; }
+
+  textarea { width: 100%; min-height: 72px; font-family: var(--font); font-size: 15px; color: var(--text); background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 14px; outline: none; resize: none; line-height: 1.5; transition: border-color 0.15s; }
+  textarea::placeholder, input::placeholder { color: var(--text-muted); }
+
+  /* Focus colors per module */
+  .panel-waste     select:focus, .panel-waste     input:focus, .panel-waste     textarea:focus { border-color: var(--red);  background: var(--navy-light); }
+  .panel-downtime  select:focus, .panel-downtime  input:focus, .panel-downtime  textarea:focus { border-color: var(--gold); background: var(--navy-light); }
+  .panel-giveaway  select:focus, .panel-giveaway  input:focus, .panel-giveaway  textarea:focus { border-color: #38BDF8;    background: var(--navy-light); }
+  .panel-repack    select:focus, .panel-repack    input:focus, .panel-repack    textarea:focus { border-color: #34D399;    background: var(--navy-light); }
+
+  /* ── PILLS ──────────────────────────────────────────────── */
+  .pill-row { display: flex; gap: 8px; }
+  .pill { flex: 1; height: 46px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--surface2); font-family: var(--font); font-size: 14px; font-weight: 600; color: var(--text-sub); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.12s; user-select: none; -webkit-user-select: none; }
+
+  .pill.active-waste     { background: var(--red-dim);  border-color: var(--red);  color: var(--red);  }
+  .pill.active-downtime  { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+  .pill.active-giveaway  { background: var(--blue-dim); border-color: #38BDF8;    color: #38BDF8;     }
+  .pill.active-repack    { background: var(--teal-dim); border-color: #34D399;    color: #34D399;     }
+  .pill.active-pounds    { background: var(--blue-dim); border-color: #38BDF8;    color: #38BDF8;     }
+  .pill.active           { background: var(--blue-dim); border-color: #38BDF8;    color: #38BDF8;     }
+
+  /* Disposition pills (waste/rework/repack) */
+  .disp-pill { flex: 1; height: 46px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--surface2); font-family: var(--font); font-size: 13px; font-weight: 700; color: var(--text-sub); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.12s; user-select: none; -webkit-user-select: none; }
+  .disp-pill.sel-waste  { background: var(--red-dim);  border-color: var(--red);  color: var(--red);  }
+  .disp-pill.sel-rework { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+  .disp-pill.sel-repack { background: var(--teal-dim); border-color: #34D399;    color: #34D399;     }
+
+  /* ── REASON / CATEGORY GRIDS ────────────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .grid-btn {
+    height: 42px; border: 1.5px solid var(--border); border-radius: 8px;
+    background: var(--surface2); font-family: var(--font); font-size: 12px;
+    font-weight: 600; color: var(--text-sub); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 0 8px; transition: all 0.12s;
+    user-select: none; -webkit-user-select: none; line-height: 1.2;
+  }
+  .grid-btn.active-waste    { background: var(--red-dim);  border-color: var(--red);  color: var(--red);  font-weight: 700; }
+  .grid-btn.active-downtime { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); font-weight: 700; }
+  .grid-btn.active-giveaway { background: var(--blue-dim); border-color: #38BDF8;    color: #38BDF8;     font-weight: 700; }
+  .grid-btn.active-repack   { background: var(--teal-dim); border-color: #34D399;    color: #34D399;     font-weight: 700; }
+
+  /* ── LBS / NUMBER INPUTS ────────────────────────────────── */
+  .big-num { font-size: 28px; font-weight: 800; text-align: center; font-family: var(--mono); letter-spacing: -0.02em; }
+  .big-num.c-red  { color: var(--red);  }
+  .big-num.c-gold { color: var(--gold); }
+  .big-num.c-blue { color: #38BDF8;     }
+  .big-num.c-teal { color: #34D399;     }
+
+  .quick-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .qbtn { flex: 1; min-width: 48px; height: 34px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); font-family: var(--font); font-size: 12px; font-weight: 700; color: var(--text-sub); cursor: pointer; transition: all 0.12s; }
+  .qbtn:active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+  /* ── SUBMIT ─────────────────────────────────────────────── */
+  .submit-area { max-width: 520px; margin: 0 auto; padding: 16px 16px 0; }
+  .error-banner { background: var(--red-dim); border: 1px solid rgba(212,35,46,0.3); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #E8433A; margin-bottom: 10px; display: none; line-height: 1.5; }
+
+  .submit-btn { width: 100%; height: 56px; font-family: var(--font); font-size: 17px; font-weight: 800; border: none; border-radius: var(--radius); cursor: pointer; letter-spacing: -0.01em; transition: opacity 0.15s, transform 0.1s; }
+  .submit-btn:active { transform: scale(0.98); opacity: 0.85; }
+  .submit-btn.btn-waste    { background: linear-gradient(135deg, #E8313C, var(--red)); color: #fff; box-shadow: 0 4px 16px rgba(212,35,46,0.3); }
+  .submit-btn.btn-downtime { background: linear-gradient(135deg, var(--gold), #B8860B); color: var(--navy); box-shadow: 0 4px 16px rgba(212,160,23,0.3); }
+  .submit-btn.btn-giveaway { background: linear-gradient(135deg, #38BDF8, #1D6A96); color: #fff; box-shadow: 0 4px 16px rgba(29,106,150,0.3); }
+  .numpad-btn { height: 58px; border-radius: 12px; background: var(--surface2); border: 1.5px solid var(--border); font-family: var(--font); font-size: 22px; font-weight: 700; color: var(--text); cursor: pointer; transition: background 0.1s, transform 0.08s; -webkit-tap-highlight-color: transparent; }
+  .numpad-btn:active { background: var(--surface3); transform: scale(0.94); }
+  .lb-dept-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:16px 10px; border-radius:12px; cursor:pointer; transition:all 0.15s; -webkit-tap-highlight-color:transparent; min-height:80px; }
+  .lb-dept-btn:active { transform:scale(0.96); }
+  .lb-dept-btn.selected { border-width:2.5px !important; filter:brightness(1.2); box-shadow:0 0 0 3px rgba(167,139,250,0.25); transform:scale(1.03); }
+  .lb-shift-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:16px 10px; border-radius:12px; cursor:pointer; transition:all 0.15s; -webkit-tap-highlight-color:transparent; min-height:72px; }
+  .lb-shift-btn:active { transform:scale(0.96); }
+  .lb-shift-btn[data-val="1"].selected { background:rgba(56,189,248,0.2) !important; border-color:#38BDF8 !important; border-width:2.5px !important; box-shadow:0 0 0 3px rgba(56,189,248,0.2); transform:scale(1.03); }
+  .lb-shift-btn[data-val="2"].selected { background:rgba(212,160,23,0.2) !important; border-color:var(--gold) !important; border-width:2.5px !important; box-shadow:0 0 0 3px rgba(212,160,23,0.2); transform:scale(1.03); }
+  .submit-btn.btn-repack   { background: linear-gradient(135deg, #34D399, var(--teal)); color: var(--navy); box-shadow: 0 4px 16px rgba(15,110,86,0.3); }
+
+  .submit-note { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+
+  /* ── SUCCESS ─────────────────────────────────────────────── */
+  .success-screen { display: none; flex-direction: column; align-items: center; text-align: center; padding: 48px 24px 40px; max-width: 520px; margin: 0 auto; }
+  .success-icon { width: 68px; height: 68px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 16px; }
+  .success-icon.si-waste    { background: var(--red-dim);  border: 2px solid rgba(212,35,46,0.3);  }
+  .success-icon.si-downtime { background: var(--gold-dim); border: 2px solid rgba(212,160,23,0.3); }
+  .success-icon.si-giveaway { background: var(--blue-dim); border: 2px solid rgba(29,106,150,0.3); }
+  .success-icon.si-repack   { background: var(--teal-dim); border: 2px solid rgba(15,110,86,0.3);  }
+
+  .success-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.02em; }
+  .success-title.c-red  { color: var(--red);  }
+  .success-title.c-gold { color: var(--gold); }
+  .success-title.c-blue { color: #38BDF8;     }
+  .success-title.c-teal { color: #34D399;     }
+
+  .success-detail { font-size: 14px; color: var(--text-sub); line-height: 1.6; margin-bottom: 8px; }
+  .success-ref    { font-size: 11px; color: var(--text-muted); background: var(--surface); border-radius: 7px; padding: 7px 14px; margin-bottom: 28px; font-family: var(--mono); }
+
+  .add-another-btn { width: 100%; height: 52px; font-family: var(--font); font-size: 16px; font-weight: 800; border: none; border-radius: var(--radius); cursor: pointer; margin-bottom: 10px; }
+  .add-another-btn.btn-waste    { background: linear-gradient(135deg, #E8313C, var(--red)); color: #fff; }
+  .add-another-btn.btn-downtime { background: linear-gradient(135deg, var(--gold), #B8860B); color: var(--navy); }
+  .add-another-btn.btn-giveaway { background: linear-gradient(135deg, #38BDF8, #1D6A96); color: #fff; }
+  .add-another-btn.btn-repack   { background: linear-gradient(135deg, #34D399, var(--teal)); color: var(--navy); }
+
+  .switch-module-btn { width: 100%; height: 46px; font-family: var(--font); font-size: 14px; font-weight: 600; border: 1px solid var(--border); border-radius: var(--radius); background: transparent; color: var(--text-sub); cursor: pointer; }
+
+  /* ── REMEMBERED USER BANNER ─────────────────────────────── */
+  .remembered-banner { display: none; margin-top: 7px; padding: 7px 12px; border-radius: 7px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .remembered-banner.rb-waste    { background: var(--red-dim);  border: 1px solid rgba(212,35,46,0.2);  color: var(--red);  }
+  .remembered-banner.rb-gold     { background: var(--gold-dim); border: 1px solid rgba(212,160,23,0.2); color: var(--gold); }
+  .remembered-banner.rb-blue     { background: var(--blue-dim); border: 1px solid rgba(29,106,150,0.2); color: #38BDF8;    }
+  .remembered-banner.rb-teal     { background: var(--teal-dim); border: 1px solid rgba(15,110,86,0.2);  color: #34D399;    }
+  .rb-clear { background: none; border: none; font-size: 11px; font-weight: 700; cursor: pointer; opacity: 0.7; font-family: var(--font); color: inherit; }
+
+  /* ── BACK BUTTON ────────────────────────────────────────── */
+  .back-bar { max-width: 520px; margin: 12px auto 0; padding: 0 16px; }
+  .back-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: none; border: none; padding: 0;
+    font-family: var(--font); font-size: 13px; font-weight: 600;
+    color: var(--text-muted); cursor: pointer;
+    transition: color 0.15s;
+  }
+  .back-btn:active { color: var(--text); }
+  .back-arrow { font-size: 16px; line-height: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div class="header-left">
+      <div class="logo-mark">K</div>
+      <div>
+        <div class="header-brand">Klement's — Plant Floor</div>
+        <div class="header-title">Data Entry Portal</div>
+      </div>
+    </div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  </div>
+</header>
+
+<div class="timestamp-bar">
+  <div class="timestamp-inner">
+    <div class="ts-dot"></div>
+    <span id="live-ts">Loading…</span>
+  </div>
+</div>
+
+<!-- ── MODULE SELECTOR ──────────────────────────────────────── -->
+<div class="module-selector" id="module-selector">
+
+  <!-- Greeting bar -->
+  <div style="max-width:520px;margin:12px auto 0;padding:0 16px;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-size:10px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;">Good <span id="greeting-time">morning</span></div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);">What are you logging today?</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;" id="home-date"></div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-sub);" id="home-time"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2x2 entry type card grid -->
+  <div style="max-width:520px;margin:10px auto 0;padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+    <div class="module-card" onclick="selectModule('waste')" style="flex-direction:column;align-items:flex-start;padding:18px 16px;gap:10px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:var(--red-dim);border:1.5px solid rgba(212,35,46,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;">🗑️</div>
+      <div>
+        <div class="module-card-title" style="font-size:14px;margin-bottom:3px;">Waste &amp; Rework</div>
+        <div class="module-card-sub">By dept, product &amp; category</div>
+      </div>
+    </div>
+
+    <div class="module-card" onclick="selectModule('downtime')" style="flex-direction:column;align-items:flex-start;padding:18px 16px;gap:10px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:var(--gold-dim);border:1.5px solid rgba(212,160,23,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;">⏱️</div>
+      <div>
+        <div class="module-card-title" style="font-size:14px;margin-bottom:3px;">Downtime</div>
+        <div class="module-card-sub">Line stop or equipment issue</div>
+      </div>
+    </div>
+
+    <div class="module-card" onclick="selectModule('giveaway')" style="flex-direction:column;align-items:flex-start;padding:18px 16px;gap:10px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:var(--blue-dim);border:1.5px solid rgba(29,106,150,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;">⚖️</div>
+      <div>
+        <div class="module-card-title" style="font-size:14px;margin-bottom:3px;">Giveaway</div>
+        <div class="module-card-sub">Overfill by product &amp; batch</div>
+      </div>
+    </div>
+
+    <div class="module-card" onclick="selectModule('repack')" style="flex-direction:column;align-items:flex-start;padding:18px 16px;gap:10px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:var(--teal-dim);border:1.5px solid rgba(15,110,86,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;">📦</div>
+      <div>
+        <div class="module-card-title" style="font-size:14px;margin-bottom:3px;">Repack</div>
+        <div class="module-card-sub">Packaging repack by reason</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Processed Pounds — double-width 5th tile -->
+  <div style="max-width:520px;margin:10px auto 0;padding:0 16px;">
+    <div class="module-card" onclick="selectModule('pounds')" style="flex-direction:row;align-items:center;gap:16px;padding:18px 20px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(56,189,248,0.12);border:1.5px solid rgba(56,189,248,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🏭</div>
+      <div style="flex:1;">
+        <div class="module-card-title" style="font-size:14px;margin-bottom:3px;color:#38BDF8;">Processed Pounds</div>
+        <div class="module-card-sub">Log lbs processed by dept, product &amp; batch</div>
+      </div>
+      <div style="font-size:22px;color:var(--text-muted);flex-shrink:0;">›</div>
+    </div>
+  </div>
+
+  <!-- Labor Clock In/Out — double-width 6th tile -->
+  <div style="max-width:520px;margin:10px auto 0;padding:0 16px;">
+    <div class="module-card" onclick="selectModule('labor')" style="flex-direction:row;align-items:center;gap:16px;padding:18px 20px;border-color:rgba(167,139,250,0.3);">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(167,139,250,0.12);border:1.5px solid rgba(167,139,250,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">👷</div>
+      <div style="flex:1;">
+        <div class="module-card-title" style="font-size:14px;margin-bottom:3px;color:#A78BFA;">Labor Headcount</div>
+        <div class="module-card-sub">Name · Dept · Shift · Line counts</div>
+      </div>
+      <div style="font-size:22px;color:var(--text-muted);flex-shrink:0;">›</div>
+    </div>
+  </div>
+
+  <!-- 2x2 session stat tiles -->
+  <div style="max-width:520px;margin:10px auto 0;padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:var(--red);font-family:var(--mono);" id="stat-waste">—</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-top:4px;">Waste lbs today</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:var(--gold);font-family:var(--mono);" id="stat-dt">—</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-top:4px;">Downtime min today</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:#38BDF8;font-family:var(--mono);" id="stat-ga">—</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-top:4px;">Giveaway lbs today</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:#34D399;font-family:var(--mono);" id="stat-rp">—</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-top:4px;">Repack lbs today</div>
+    </div>
+  </div>
+
+  <!-- Welcome note -->
+  <div style="max-width:520px;margin:10px auto 0;padding:0 16px;">
+    <div style="padding:13px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;align-items:flex-start;gap:10px;">
+      <div style="font-size:18px;flex-shrink:0;margin-top:1px;">💡</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">How to use this portal</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Tap a tile above, fill in the details, and hit submit. Your name is remembered on this device. All entries are timestamped automatically.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- WASTE & REWORK PANEL                                       -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="form-panel panel-waste" id="panel-waste">
+
+  <div class="back-bar">
+    <button class="back-btn" onclick="goHome()">
+      <span class="back-arrow">←</span> All entry types
+    </button>
+  </div>
+  <div class="panel-divider">
+    <div class="panel-divider-line"></div>
+    <div class="panel-divider-label" style="color:var(--red);">🗑️ Waste &amp; Rework</div>
+    <div class="panel-divider-line"></div>
+  </div>
+
+  <!-- Disposition -->
+  <div class="card">
+    <div class="field">
+      <label>Disposition <span class="req">*</span></label>
+      <div class="pill-row" id="wr-disp-pills">
+        <div class="disp-pill" data-val="Waste"  onclick="wrSelectDisp(this)">🗑️ Waste</div>
+        <div class="disp-pill" data-val="Rework" onclick="wrSelectDisp(this)">🔄 Rework</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Who / Shift -->
+  <div class="card">
+    <div class="field">
+      <label>Your name <span class="req">*</span></label>
+      <input type="text" id="wr-user" list="wr-user-list" placeholder="Type or select your name…" autocomplete="off" autocorrect="off" spellcheck="false" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+      <datalist id="wr-user-list">
+        <option>CLARA</option><option>JIMENA</option><option>JAIME</option><option>DAISY</option>
+        <option>TREBLE</option><option>LISMARY</option><option>ESTEBAN</option><option>MARCELA</option>
+        <option>MICHAEL</option><option>MARYCELA</option><option>RT</option><option>JE</option>
+        <option>RUBEN</option><option>LEOVANNI</option><option>CARLOS</option><option>AGUIEL</option>
+        <option>MARLIN</option><option>JUAN</option><option>LUIS</option><option>ALEJANDRO</option><option>SAM</option>
+      </datalist>
+      <div id="wr-remembered" class="remembered-banner rb-waste" style="display:none;">
+        <span>👤 Remembered from last entry</span>
+        <button class="rb-clear" onclick="clearUser('wr')">Clear</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Shift <span class="req">*</span></label>
+      <div class="pill-row" id="wr-shift-pills">
+        <div class="pill" data-val="1" onclick="selectPill(this,'wr-shift-pills','waste')">☀ Shift 1</div>
+        <div class="pill" data-val="2" onclick="selectPill(this,'wr-shift-pills','waste')">🌙 Shift 2</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location -->
+  <div class="card">
+    <div class="field">
+      <label>Department <span class="req">*</span></label>
+      <select id="wr-dept" onchange="wrUpdateLocations()">
+        <option value="">Select department…</option>
+        <option>Packaging</option><option>Formulation</option><option>Kitchen</option>
+        <option>Smokehouse</option><option>QA</option><option>Warehouse</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Location</label>
+      <select id="wr-location"><option value="">Select department first…</option></select>
+    </div>
+    <div class="field">
+      <label>Product / SKU</label>
+      <input type="text" id="wr-product" placeholder="e.g. 66910" autocomplete="off" spellcheck="false" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="field">
+      <label>Batch / Lot</label>
+      <input type="text" id="wr-batch" placeholder="Batch or lot number" autocomplete="off">
+    </div>
+  </div>
+
+  <!-- Category — swaps based on disposition -->
+  <div class="card" id="wr-cat-card">
+    <div class="field">
+      <label id="wr-cat-label">Category <span class="req">*</span></label>
+      <div class="grid-2" id="wr-cat-grid">
+        <!-- Populated by wrSelectDisp() -->
+      </div>
+    </div>
+  </div>
+
+  <!-- LBS + LBS CONSUMED (rework only) -->
+  <div class="card">
+    <div class="field">
+      <label id="wr-lbs-label">Pounds (LBS) <span class="req">*</span></label>
+      <input type="number" id="wr-lbs" class="big-num c-red" placeholder="0" min="0.1" step="0.1" inputmode="decimal">
+    </div>
+    <div class="field" id="wr-lbs-consumed-field" style="display:none;">
+      <label>Lbs Consumed <span style="font-size:10px;color:var(--text-muted);font-weight:400;">(optional)</span></label>
+      <input type="number" id="wr-lbs-consumed" class="big-num c-gold" placeholder="0" min="0.1" step="0.1" inputmode="decimal">
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Total pounds consumed during the rework process</div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card">
+    <div class="field">
+      <label>Notes (optional)</label>
+      <textarea id="wr-notes" placeholder="Additional details…" rows="3"></textarea>
+    </div>
+  </div>
+
+  <div class="submit-area">
+    <div class="error-banner" id="wr-error"></div>
+    <button class="submit-btn btn-waste" onclick="submitWaste()">Submit Waste &amp; Rework Entry</button>
+    <p class="submit-note">Entries are permanent and cannot be edited after submission.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- DOWNTIME PANEL                                             -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="form-panel panel-downtime" id="panel-downtime">
+
+  <div class="back-bar">
+    <button class="back-btn" onclick="goHome()">
+      <span class="back-arrow">←</span> All entry types
+    </button>
+  </div>
+  <div class="panel-divider">
+    <div class="panel-divider-line"></div>
+    <div class="panel-divider-label" style="color:var(--gold);">⏱️ Downtime</div>
+    <div class="panel-divider-line"></div>
+  </div>
+
+  <!-- Who / Shift -->
+  <div class="card">
+    <div class="field">
+      <label>Your name <span class="req">*</span></label>
+      <input type="text" id="dt-user" list="dt-user-list" placeholder="Type or select your name…" autocomplete="off" autocorrect="off" spellcheck="false" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+      <datalist id="dt-user-list">
+        <option>CLARA</option><option>JIMENA</option><option>JAIME</option><option>DAISY</option>
+        <option>TREBLE</option><option>LISMARY</option><option>ESTEBAN</option><option>MARCELA</option>
+        <option>MICHAEL</option><option>MARYCELA</option><option>RT</option><option>JE</option>
+        <option>RUBEN</option><option>LEOVANNI</option><option>CARLOS</option><option>AGUIEL</option>
+        <option>MARLIN</option><option>JUAN</option><option>LUIS</option><option>ALEJANDRO</option><option>SAM</option>
+      </datalist>
+      <div id="dt-remembered" class="remembered-banner rb-gold" style="display:none;">
+        <span>👤 Remembered from last entry</span>
+        <button class="rb-clear" onclick="clearUser('dt')">Clear</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Shift <span class="req">*</span></label>
+      <div class="pill-row" id="dt-shift-pills">
+        <div class="pill" data-val="1" onclick="selectPill(this,'dt-shift-pills','downtime')">☀ Shift 1</div>
+        <div class="pill" data-val="2" onclick="selectPill(this,'dt-shift-pills','downtime')">🌙 Shift 2</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location -->
+  <div class="card">
+    <div class="field">
+      <label>Department <span class="req">*</span></label>
+      <select id="dt-dept" onchange="dtUpdateLines()">
+        <option value="">Select department…</option>
+        <option>Packaging</option><option>Formulation</option><option>Kitchen</option><option>Smokehouse</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Line / Machine <span class="req">*</span></label>
+      <select id="dt-line"><option value="">Select department first…</option></select>
+    </div>
+  </div>
+
+  <!-- Reason -->
+  <div class="card">
+    <div class="field">
+      <label>Reason <span class="req">*</span></label>
+      <div class="grid-2" id="dt-reason-grid">
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Mechanical">Mechanical</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Film Change">Film Change</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Jam Up">Jam Up</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Short Staffed">Short Staffed</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="No Power">No Power</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="No Water">No Water</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="No Air">No Air</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="No Materials">No Materials</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Waiting for Product">Waiting for Product</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Change Over">Change Over</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Wash Out">Wash Out</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="QA Investigation">QA Investigation</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Metal Detector">Metal Detector</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Leaker Checks">Leaker Checks</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Employee Injury">Employee Injury</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Casing Issues">Casing Issues</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Sealing Issues">Sealing Issues</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Forming Issues">Forming Issues</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Vacuum Issues">Vacuum Issues</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Food Safety">Food Safety</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Allergen Wash">Allergen Wash</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Blade Issues">Blade Issues</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Blade Change">Blade Change</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Oven Failure">Oven Failure</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Nitrogen Issues">Nitrogen Issues</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Gas Issues">Gas Issues</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Wet Bulb">Wet Bulb</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Dry Bulb">Dry Bulb</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Air Flow Issues">Air Flow Issues</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Breaks / Lunches">Breaks / Lunches</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Film Alignment">Film Alignment</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Printer Issue">Printer Issue</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Break">Break</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'dt-reason-grid','downtime')" data-val="Lunch">Lunch</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minutes -->
+  <div class="card">
+    <div class="field">
+      <label>Total minutes <span class="req">*</span></label>
+      <input type="number" id="dt-minutes" class="big-num c-gold" placeholder="0" min="1" max="999" step="1" inputmode="numeric">
+      <div class="quick-row">
+        <button class="qbtn" onclick="addMins(5)">+5</button>
+        <button class="qbtn" onclick="addMins(10)">+10</button>
+        <button class="qbtn" onclick="addMins(15)">+15</button>
+        <button class="qbtn" onclick="addMins(30)">+30</button>
+        <button class="qbtn" onclick="addMins(45)">+45</button>
+        <button class="qbtn" onclick="addMins(60)">+60</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card">
+    <div class="field">
+      <label>Notes (optional)</label>
+      <textarea id="dt-notes" placeholder="Describe the issue, parts needed, etc." rows="3"></textarea>
+    </div>
+  </div>
+
+  <div class="submit-area">
+    <div class="error-banner" id="dt-error"></div>
+    <button class="submit-btn btn-downtime" onclick="submitDowntime()">Submit Downtime Entry</button>
+    <p class="submit-note">Entries are permanent and cannot be edited after submission.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- GIVEAWAY PANEL                                             -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="form-panel panel-giveaway" id="panel-giveaway">
+
+  <div class="back-bar">
+    <button class="back-btn" onclick="goHome()">
+      <span class="back-arrow">←</span> All entry types
+    </button>
+  </div>
+  <div class="panel-divider">
+    <div class="panel-divider-line"></div>
+    <div class="panel-divider-label" style="color:#38BDF8;">⚖️ Giveaway</div>
+    <div class="panel-divider-line"></div>
+  </div>
+
+  <!-- Who / Shift -->
+  <div class="card">
+    <div class="field">
+      <label>Your name <span class="req">*</span></label>
+      <input type="text" id="ga-user" list="ga-user-list" placeholder="Type or select your name…" autocomplete="off" autocorrect="off" spellcheck="false" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+      <datalist id="ga-user-list">
+        <option>CLARA</option><option>JIMENA</option><option>JAIME</option><option>DAISY</option>
+        <option>TREBLE</option><option>LISMARY</option><option>ESTEBAN</option><option>MARCELA</option>
+        <option>MICHAEL</option><option>MARYCELA</option><option>RT</option><option>JE</option>
+        <option>RUBEN</option><option>LEOVANNI</option><option>CARLOS</option><option>AGUIEL</option>
+        <option>MARLIN</option><option>JUAN</option><option>LUIS</option><option>ALEJANDRO</option><option>SAM</option>
+      </datalist>
+      <div id="ga-remembered" class="remembered-banner rb-blue" style="display:none;">
+        <span>👤 Remembered from last entry</span>
+        <button class="rb-clear" onclick="clearUser('ga')">Clear</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Shift <span class="req">*</span></label>
+      <div class="pill-row" id="ga-shift-pills">
+        <div class="pill" data-val="1" onclick="selectPill(this,'ga-shift-pills','giveaway')">☀ Shift 1</div>
+        <div class="pill" data-val="2" onclick="selectPill(this,'ga-shift-pills','giveaway')">🌙 Shift 2</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location -->
+  <div class="card">
+    <div class="field">
+      <label>Department <span class="req">*</span></label>
+      <div class="pill-row" id="ga-dept-pills">
+        <div class="pill" data-val="Packaging" onclick="selectPill(this,'ga-dept-pills','giveaway')">📦 Packaging</div>
+        <div class="pill" data-val="Kitchen"   onclick="selectPill(this,'ga-dept-pills','giveaway')">🔪 Kitchen</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product details -->
+  <div class="card">
+    <div class="field">
+      <label>Product / SKU <span class="req">*</span></label>
+      <input type="text" id="ga-product" placeholder="e.g. 66910" autocomplete="off" spellcheck="false" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="field">
+      <label>Batch / Lot <span class="req">*</span></label>
+      <input type="text" id="ga-batch" placeholder="Batch or lot number" autocomplete="off">
+    </div>
+  </div>
+
+  <!-- Giveaway measurements -->
+  <div class="card">
+    <div class="field">
+      <label>Number of units <span class="req">*</span></label>
+      <input type="number" id="ga-units" class="big-num c-blue" placeholder="0" min="1" step="1" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Target weight per unit (g) <span class="req">*</span></label>
+      <input type="number" id="ga-target-wt" placeholder="e.g. 454" min="0.1" step="0.1" inputmode="decimal" style="font-size:20px;font-weight:700;text-align:center;font-family:var(--mono);color:#38BDF8;">
+    </div>
+    <div class="field">
+      <label>Avg actual weight per unit (g) <span class="req">*</span></label>
+      <input type="number" id="ga-actual-wt" placeholder="e.g. 458" min="0.1" step="0.1" inputmode="decimal" style="font-size:20px;font-weight:700;text-align:center;font-family:var(--mono);color:#38BDF8;" oninput="calcGiveaway()">
+    </div>
+    <div class="field" id="ga-calc-field" style="display:none;">
+      <label>Calculated giveaway</label>
+      <div style="display:flex;gap:16px;align-items:center;padding:6px 0;">
+        <div style="text-align:center;flex:1;">
+          <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Overfill per unit</div>
+          <div id="ga-overfill" style="font-size:20px;font-weight:800;color:#38BDF8;font-family:var(--mono);">—</div>
+        </div>
+        <div style="width:1px;background:var(--border);"></div>
+        <div style="text-align:center;flex:1;">
+          <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Total giveaway (g)</div>
+          <div id="ga-total-lbs" style="font-size:20px;font-weight:800;color:#38BDF8;font-family:var(--mono);">—</div>
+        </div>
+        <div style="width:1px;background:var(--border);"></div>
+        <div style="text-align:center;flex:1;">
+          <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Giveaway %</div>
+          <div id="ga-pct" style="font-size:20px;font-weight:800;color:#38BDF8;font-family:var(--mono);">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card">
+    <div class="field">
+      <label>Notes (optional)</label>
+      <textarea id="ga-notes" placeholder="Additional details, line, or observations…" rows="3"></textarea>
+    </div>
+  </div>
+
+  <div class="submit-area">
+    <div class="error-banner" id="ga-error"></div>
+    <button class="submit-btn btn-giveaway" onclick="submitGiveaway()">Submit Giveaway Entry</button>
+    <p class="submit-note">Entries are permanent and cannot be edited after submission.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- REPACK PANEL                                               -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="form-panel panel-repack" id="panel-repack">
+
+  <div class="back-bar">
+    <button class="back-btn" onclick="goHome()">
+      <span class="back-arrow">←</span> All entry types
+    </button>
+  </div>
+  <div class="panel-divider">
+    <div class="panel-divider-line"></div>
+    <div class="panel-divider-label" style="color:#34D399;">📦 Repack</div>
+    <div class="panel-divider-line"></div>
+  </div>
+
+  <!-- Who / Shift -->
+  <div class="card">
+    <div class="field">
+      <label>Your name <span class="req">*</span></label>
+      <input type="text" id="rp-user" list="rp-user-list" placeholder="Type or select your name…"
+        autocomplete="off" autocorrect="off" spellcheck="false"
+        style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+      <datalist id="rp-user-list">
+        <option>CLARA</option><option>JIMENA</option><option>JAIME</option><option>DAISY</option>
+        <option>TREBLE</option><option>LISMARY</option><option>ESTEBAN</option><option>MARCELA</option>
+        <option>MICHAEL</option><option>MARYCELA</option><option>RT</option><option>JE</option>
+        <option>RUBEN</option><option>LEOVANNI</option><option>CARLOS</option><option>AGUIEL</option>
+        <option>MARLIN</option><option>JUAN</option><option>LUIS</option><option>ALEJANDRO</option><option>SAM</option>
+      </datalist>
+      <div id="rp-remembered" class="remembered-banner rb-teal" style="display:none;">
+        <span>👤 Remembered from last entry</span>
+        <button class="rb-clear" onclick="clearUser('rp')">Clear</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Shift <span class="req">*</span></label>
+      <div class="pill-row" id="rp-shift-pills">
+        <div class="pill" data-val="1" onclick="selectPill(this,'rp-shift-pills','repack')">☀ Shift 1</div>
+        <div class="pill" data-val="2" onclick="selectPill(this,'rp-shift-pills','repack')">🌙 Shift 2</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location -->
+  <div class="card">
+    <div class="field">
+      <label>Department</label>
+      <div style="height:48px;background:var(--teal-dim);border:1.5px solid #34D399;border-radius:8px;display:flex;align-items:center;padding:0 14px;font-size:15px;font-weight:700;color:#34D399;letter-spacing:0.01em;">
+        📦 Packaging
+      </div>
+    </div>
+    <div class="field">
+      <label>Line <span class="req">*</span></label>
+      <select id="rp-line">
+        <option value="">Select line…</option>
+        <option>Line 1</option><option>Line 2</option><option>Line 3</option>
+        <option>Line 4</option><option>Line 5</option><option>Line 6</option>
+        <option>Line 7</option><option>Line 8</option><option>Line 9</option>
+        <option>Line 10</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Product / SKU</label>
+      <input type="text" id="rp-product" placeholder="e.g. 66910" autocomplete="off"
+        spellcheck="false" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="field">
+      <label>Batch / Lot</label>
+      <input type="text" id="rp-batch" placeholder="Batch or lot number" autocomplete="off">
+    </div>
+  </div>
+
+  <!-- Repack reason -->
+  <div class="card">
+    <div class="field">
+      <label>Repack reason <span class="req">*</span></label>
+      <div class="grid-2" id="rp-reason-grid">
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Labeling">Labeling</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Date Code">Date Code</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Bad Seals">Bad Seals</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Air Bubbles">Air Bubbles</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Tunneling">Tunneling</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Leakers">Leakers</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Bad Cuts">Bad Cuts</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Film Wrinkles">Film Wrinkles</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Film Alignment">Film Alignment</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Leaker Failure">Leaker Failure</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Nitrogen Failure">Nitrogen Failure</div>
+        <div class="grid-btn" onclick="selectGridBtn(this,'rp-reason-grid','repack')" data-val="Meat in Seals">Meat in Seals</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LBS -->
+  <div class="card">
+    <div class="field">
+      <label>Pounds repacked (LBS) <span class="req">*</span></label>
+      <input type="number" id="rp-lbs" class="big-num c-teal" placeholder="0" min="0.1" step="0.1" inputmode="decimal">
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card">
+    <div class="field">
+      <label>Notes (optional)</label>
+      <textarea id="rp-notes" placeholder="Additional details…" rows="3"></textarea>
+    </div>
+  </div>
+
+  <div class="submit-area">
+    <div class="error-banner" id="rp-error"></div>
+    <button class="submit-btn btn-repack" onclick="submitRepack()">Submit Repack Entry</button>
+    <p class="submit-note">Entries are permanent and cannot be edited after submission.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- LABOR CLOCK IN/OUT PANEL                                   -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="form-panel panel-labor" id="panel-labor" style="display:none;">
+  <div class="back-bar">
+    <button class="back-btn" onclick="goHome()">
+      <span class="back-arrow">←</span> All entry types
+    </button>
+  </div>
+  <div class="panel-divider">
+    <div class="panel-divider-line"></div>
+    <div class="panel-divider-label" style="color:#A78BFA;">👷 Labor Headcount Entry</div>
+    <div class="panel-divider-line"></div>
+  </div>
+
+  <!-- Supervisor name -->
+  <div class="card">
+    <div class="field">
+      <label>Your Name <span class="req">*</span></label>
+      <input type="text" id="lb-user" placeholder="Your name..."
+        style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" autocomplete="off">
+    </div>
+  </div>
+
+  <!-- Shift -->
+  <div class="card">
+    <div class="field">
+      <label>Shift <span class="req">*</span></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;">
+        <div class="lb-shift-btn" data-val="1" onclick="selectLbShift(this,'1')"
+          style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 10px;border-radius:12px;cursor:pointer;transition:all 0.15s;min-height:72px;background:rgba(56,189,248,0.08);border:2px solid rgba(56,189,248,0.25);color:#38BDF8;">
+          <span style="font-size:24px;">☀️</span>
+          <span style="font-size:15px;font-weight:700;">Shift 1</span>
+        </div>
+        <div class="lb-shift-btn" data-val="2" onclick="selectLbShift(this,'2')"
+          style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 10px;border-radius:12px;cursor:pointer;transition:all 0.15s;min-height:72px;background:rgba(212,160,23,0.08);border:2px solid rgba(212,160,23,0.25);color:var(--gold);">
+          <span style="font-size:24px;">🌙</span>
+          <span style="font-size:15px;font-weight:700;">Shift 2</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Department -->
+  <div class="card">
+    <div class="field">
+      <label>Department <span class="req">*</span></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;" id="lb-dept-pills">
+        <div class="lb-dept-btn" data-val="Packaging"
+          onclick="selectLbDept(this,'Packaging')"
+          style="background:rgba(45,143,212,0.08);border:2px solid rgba(45,143,212,0.25);color:#38BDF8;">
+          <span style="font-size:24px;">📦</span>
+          <span style="font-size:15px;font-weight:700;">Packaging</span>
+        </div>
+        <div class="lb-dept-btn" data-val="Formulation"
+          onclick="selectLbDept(this,'Formulation')"
+          style="background:rgba(212,160,23,0.08);border:2px solid rgba(212,160,23,0.25);color:var(--gold);">
+          <span style="font-size:24px;">⚙️</span>
+          <span style="font-size:15px;font-weight:700;">Formulation</span>
+        </div>
+        <div class="lb-dept-btn" data-val="Kitchen"
+          onclick="selectLbDept(this,'Kitchen')"
+          style="background:rgba(52,211,153,0.08);border:2px solid rgba(52,211,153,0.25);color:var(--green);">
+          <span style="font-size:24px;">🔪</span>
+          <span style="font-size:15px;font-weight:700;">Kitchen</span>
+        </div>
+        <div class="lb-dept-btn" data-val="Smokehouse"
+          onclick="selectLbDept(this,'Smokehouse')"
+          style="background:rgba(251,146,60,0.08);border:2px solid rgba(251,146,60,0.25);color:#FB923C;">
+          <span style="font-size:24px;">🔥</span>
+          <span style="font-size:15px;font-weight:700;">Smokehouse</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Line / Machine + headcount -->
+  <div class="card" id="lb-lines-card" style="display:none;">
+    <div class="field">
+      <label>Line / Machine <span class="req">*</span></label>
+      <select id="lb-line-select" style="font-size:16px;">
+        <option value="">Select line or machine...</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Headcount <span class="req">*</span></label>
+      <input type="number" id="lb-headcount-input" placeholder="0" min="-200" max="200" step="1"
+        inputmode="numeric" style="font-size:28px;font-weight:800;text-align:center;font-family:var(--mono);color:#A78BFA;">
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card">
+    <div class="field">
+      <label>Notes (optional)</label>
+      <textarea id="lb-notes" placeholder="Any notes about this shift..." rows="2" style="resize:none;"></textarea>
+    </div>
+  </div>
+
+  <div id="lb-error" class="error-msg" style="display:none;"></div>
+
+  <div style="padding:16px;">
+    <button class="submit-btn" style="background:linear-gradient(135deg,#7C3AED,#A78BFA);color:#fff;box-shadow:0 4px 16px rgba(124,58,237,0.3);" onclick="submitLabor()">
+      Submit Labor Entry
+    </button>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- PROCESSED POUNDS PANEL                                     -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="form-panel panel-pounds" id="panel-pounds">
+  <div class="back-bar">
+    <button class="back-btn" onclick="goHome()">
+      <span class="back-arrow">←</span> All entry types
+    </button>
+  </div>
+  <div class="panel-divider">
+    <div class="panel-divider-line"></div>
+    <div class="panel-divider-label" style="color:#38BDF8;">🏭 Processed Pounds</div>
+    <div class="panel-divider-line"></div>
+  </div>
+
+  <!-- Who / Shift -->
+  <div class="card">
+    <div class="field">
+      <label>Your name <span class="req">*</span></label>
+      <input type="text" id="pp-user" list="pp-user-list" placeholder="Type or select your name…"
+        autocomplete="off" autocorrect="off" spellcheck="false"
+        style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+      <datalist id="pp-user-list">
+        <option>CLARA</option><option>JIMENA</option><option>JAIME</option><option>DAISY</option>
+        <option>TREBLE</option><option>LISMARY</option><option>ESTEBAN</option><option>MARCELA</option>
+        <option>MICHAEL</option><option>MARYCELA</option><option>RT</option><option>JE</option>
+        <option>RUBEN</option><option>LEOVANNI</option><option>CARLOS</option><option>AGUIEL</option>
+        <option>MARLIN</option><option>JUAN</option><option>LUIS</option><option>ALEJANDRO</option><option>SAM</option>
+      </datalist>
+      <div id="pp-remembered" class="remembered-banner rb-blue" style="display:none;">
+        <span>👤 Remembered from last entry</span>
+        <button class="rb-clear" onclick="clearUser('pp')">Clear</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Shift <span class="req">*</span></label>
+      <div class="pill-row" id="pp-shift-pills">
+        <div class="pill" data-val="1" onclick="selectPill(this,'pp-shift-pills','giveaway')">☀ Shift 1</div>
+        <div class="pill" data-val="2" onclick="selectPill(this,'pp-shift-pills','giveaway')">🌙 Shift 2</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Department + Operation + Machine -->
+  <div class="card">
+    <div class="field">
+      <label>Department</label>
+      <div style="height:48px;background:rgba(56,189,248,0.1);border:1.5px solid rgba(56,189,248,0.3);border-radius:8px;display:flex;align-items:center;padding:0 14px;font-size:15px;font-weight:700;color:#38BDF8;">
+        📦 Packaging
+      </div>
+    </div>
+    <div class="field">
+      <label>Operation <span class="req">*</span></label>
+      <div class="pill-row" id="pp-op-pills">
+        <div class="pill" data-val="Cutting"       onclick="selectPill(this,'pp-op-pills','pounds')">✂️ Cutting</div>
+        <div class="pill" data-val="Peeling"       onclick="selectPill(this,'pp-op-pills','pounds')">🔪 Peeling</div>
+        <div class="pill" data-val="Pack Lines" onclick="selectPill(this,'pp-op-pills','pounds')">📦 Pack Lines</div>
+      </div>
+    </div>
+    <div class="field" id="pp-machine-field">
+      <label>Machine <span class="req">*</span></label>
+      <select id="pp-machine">
+        <option value="">Select machine…</option>
+        <optgroup label="Peelers">
+          <option>Peeler 1</option><option>Peeler 2</option><option>Peeler 3</option><option>Peeler 4</option>
+          <option>Peeler 5</option><option>Peeler 6</option><option>Peeler 7</option><option>Peeler 8</option>
+        </optgroup>
+        <optgroup label="Stick Cutters">
+          <option>Stick Cutter 1</option><option>Stick Cutter 2</option><option>Stick Cutter 3</option>
+        </optgroup>
+        <optgroup label="Link Cutters">
+          <option>Link Cutter 1</option><option>Link Cutter 2</option><option>Link Cutter 3</option>
+        </optgroup>
+        <optgroup label="Other">
+          <option>Hand Cutting</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="field" id="pp-line-field" style="display:none;">
+      <label>Line <span class="req">*</span></label>
+      <select id="pp-line">
+        <option value="">Select line…</option>
+        <option>Line 1</option><option>Line 2</option><option>Line 3</option>
+        <option>Line 4</option><option>Line 5</option><option>Line 6</option>
+        <option>Line 7</option><option>Line 8</option><option>Line 9</option>
+        <option>Line 10</option>
+      </select>
+    </div>
+    <div class="field" id="pp-uom-field" style="display:none;">
+      <label>Enter by <span class="req">*</span></label>
+      <div class="pill-row" id="pp-uom-pills">
+        <div class="pill active" data-val="cases" onclick="selectPpUom(this,'cases')">&#x1F4E6; Cases</div>
+        <div class="pill" data-val="lbs" onclick="selectPpUom(this,'lbs')">&#x2696; Pounds</div>
+      </div>
+    </div>
+    <div class="field" id="pp-cases-field" style="display:none;">
+      <label>Number of Cases <span class="req">*</span></label>
+      <input type="number" id="pp-cases" placeholder="0" min="1" step="1" inputmode="numeric" oninput="calcPackLineLbs()" style="font-size:22px;font-weight:700;text-align:center;">
+      <div id="pp-cases-calc" style="margin-top:8px;padding:10px 14px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);border-radius:8px;font-size:13px;color:var(--text-sub);display:none;">
+        <span style="color:var(--text-muted);">Calculated lbs: </span>
+        <span id="pp-cases-lbs-preview" style="font-weight:800;color:#38BDF8;font-family:monospace;">---</span>
+        <span style="color:var(--text-muted);font-size:11px;"> (case weight from product table)</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Product / SKU <span class="req">*</span></label>
+      <input type="text" id="pp-product" placeholder="e.g. 66910" autocomplete="off"
+        spellcheck="false" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="field">
+      <label>Batch / Lot</label>
+      <input type="text" id="pp-batch" placeholder="Batch or lot number" autocomplete="off">
+    </div>
+  </div>
+
+  <!-- Pounds -->
+  <div class="card">
+    <div class="field" id="pp-lbs-field">
+      <label id="pp-lbs-label">Pounds Processed <span class="req">*</span></label>
+      <input type="number" id="pp-lbs" placeholder="0" min="1" step="1" inputmode="numeric"
+        style="font-size:28px;font-weight:800;text-align:center;font-family:var(--mono);color:#38BDF8;">
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card">
+    <div class="field">
+      <label>Notes (optional)</label>
+      <textarea id="pp-notes" placeholder="Additional details…" rows="3"></textarea>
+    </div>
+  </div>
+
+  <div class="submit-area">
+    <div class="error-banner" id="pp-error"></div>
+    <button class="submit-btn" style="background:linear-gradient(135deg,#38BDF8,#1D6A96);color:#fff;box-shadow:0 4px 16px rgba(29,106,150,0.3);" onclick="submitPounds()">Submit Processed Pounds Entry</button>
+    <p class="submit-note">Entries are permanent and cannot be edited after submission.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="success-screen" id="success-screen">
+  <div class="success-icon" id="succ-icon"></div>
+  <div class="success-title" id="succ-title"></div>
+  <div class="success-detail" id="succ-detail"></div>
+  <div class="success-ref" id="succ-ref"></div>
+  <button class="add-another-btn" id="succ-again-btn" onclick="addAnother()"></button>
+  <button class="back-btn" style="margin-top:4px;color:var(--text-sub);font-size:14px;" onclick="goHome()">
+    <span class="back-arrow">←</span> Back to entry selection
+  </button>
+</div>
+
+<script>
+// ── SESSION ENTRY LOG ────────────────────────────────────────
+const sessionEntries = [];
+let statWaste = 0, statDt = 0, statGa = 0, statRp = 0;
+
+function addSessionEntry(icon, color, text, ref) {
+  sessionEntries.unshift({ icon, color, text, ref });
+}
+
+function updateHomeStats() {
+  const sw = document.getElementById('stat-waste');
+  const sd = document.getElementById('stat-dt');
+  const sg = document.getElementById('stat-ga');
+  const sr = document.getElementById('stat-rp');
+  if (sw) sw.textContent = statWaste > 0 ? statWaste.toFixed(1) : '—';
+  if (sd) sd.textContent = statDt   > 0 ? statDt              : '—';
+  if (sg) sg.textContent = statGa   > 0 ? statGa.toFixed(2)  : '—';
+  if (sr) sr.textContent = statRp   > 0 ? statRp.toFixed(1)  : '—';
+}
+
+function updateHomeClock() {
+  const h = new Date().getHours();
+  const greet = document.getElementById('greeting-time');
+  const dateEl = document.getElementById('home-date');
+  const timeEl = document.getElementById('home-time');
+  if (greet) greet.textContent = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  if (timeEl) timeEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+setInterval(updateHomeClock, 1000);
+updateHomeClock();
+
+// ── CONSTANTS ────────────────────────────────────────────────
+const DEPT_LINES = {
+  Packaging:   [
+    'Peeler','Link Cutter','Stick Cutter','Pouch Sealer',
+    'Line 1','Line 2','Line 3','Line 4','Line 5',
+    'Line 6','Line 7','Line 8','Line 9','Line 10',
+    'Robot','Metal Detector','Checkweigher','Case Taper','Printer','Pallet Wrapper'
+  ],
+  Formulation: [
+    'Grinder 1','Grinder 2','Grinder 3',
+    'Mixer 1','Mixer 2','Mixer 3',
+    'Frozen Grinder',
+    'Tote Dumper 1','Tote Dumper 2','Tote Dumper 3',
+    'Inspection Table','Emulsifier','Auger'
+  ],
+  Kitchen:     [
+    'Stuffer 1','Stuffer 2','Stuffer 3','Stuffer 4','Stuffer 5','Stuffer 6','Stuffer 7','Stuffer 8',
+    'LPG 1','LPG 2','LPG 3','LPG 4',
+    'Linker 1','Linker 2','Linker 3','Linker 4','Linker 5','Linker 6',
+    'Polyclip 1','Polyclip 2','Polyclip 3',
+    'Drencher 1','Drencher 2'
+  ],
+  Smokehouse:  ['House 1','House 2','House 3','House 4','House 5','House 6','House 7','House 8','House 9','House 10','House 11','House 12']
+};
+
+const WR_DEPT_LOCATIONS = {
+  Packaging:   ['Line 1','Line 2','Line 3','Line 4','Line 5','Line 6','Line 7','Line 8','Line 9','Line 10','Peeler 1','Peeler 2','Peeler 3','Peeler 4','Peeler 5','Peeler 6','Peeler 7','Stick Cutter','Link Cutter'],
+  Formulation: ['Mixer 1','Mixer 2','Mixer 3','Grinder 1','Grinder 2','Grinder 3','Big Frozen Grinder','Emulsifier','Inspection Table'],
+  Kitchen:     ['Stuffer 1','Stuffer 2','Stuffer 3','Stuffer 4','Stuffer 5','Stuffer 6','Stuffer 7','Stuffer 8','Linker 1','Linker 2','Linker 3','Linker 4','Linker 5','Linker 6','Polyclip 1','Polyclip 2','Drencher 1','Drencher 2'],
+  Smokehouse:  ['House 1','House 2','House 3','House 4','House 5','House 6','House 7','House 8','House 9','House 10','House 11','House 12'],
+  QA:          ['QA Lab','Line QA','Incoming'],
+  Warehouse:   ['Cooler','Freezer','Dry Storage','Receiving Dock']
+};
+
+const FLOW_URLS = {
+  waste:    'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/21/workflows/51fb0b5cc0044dd4ad26f3fbc0e938c7/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=mWOTYcdTxWBN6DUqCl_XV15fNFVaAxz5GFbcKYO4kYc',
+  downtime: 'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/14/workflows/e4f32dfa4cbe49eb9e4f8eda5e0eb961/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Bczv5tktvXGrU6-qKeJY26VhlF7B3tcvIWFE21Eoffo',
+  giveaway: 'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/10/workflows/ea0f7802ca734d699efc49fb8718f464/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VKDNVkTLWE3yoA-ClOyC9WBXzAESnQOfzzFX1OVEcnU',
+  repack:   'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/31/workflows/3b9bf807d8164b08961acc423e7a76e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=83nWA3ZEgFgPcREzooUJDg-HU8Us4fwQmxAK8fLfnV8',
+  pounds:   'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/05/workflows/b42b57d1014945fda66e2b590933c94f/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Jpq-82k0Znr9jh5O1hjjEmOD198cnvb8qZyGdlUYRUA',
+  labor:    'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/07/workflows/e099aaf523f644bf83dbb87c0374ed4d/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ZFFyRQiBNJ3JrP5Dt-bfOHE4SvhZEdpEqKgNIt2s0tc'
+};
+
+const USER_KEYS = { wr:'klements_wr_user', dt:'klements_dt_user', ga:'klements_ga_user', rp:'klements_rp_user', pp:'klements_pp_user' };
+
+// State
+let activeModule   = null;
+let wrDisposition  = '';
+let wrShift        = '';
+let wrCategory     = '';
+let dtShift        = '';
+let dtReason       = '';
+let gaShift        = '';
+let gaDept         = '';
+let rpShift        = '';
+let rpReason       = '';
+let rpDept         = 'Packaging';
+let ppShift        = '';
+let ppOperation    = '';
+let lbDept         = '';
+let lbShift        = '';
+let lbClockInterval = null;
+
+// ── CLOCK ────────────────────────────────────────────────────
+function tick() {
+  document.getElementById('live-ts').textContent =
+    new Date().toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+tick(); setInterval(tick, 1000);
+
+// ── MODULE SELECTION ─────────────────────────────────────────
+function selectModule(mod) {
+  activeModule = mod;
+
+  // Style selected card
+  document.querySelectorAll('.module-card').forEach(c => {
+    c.classList.remove('active-waste','active-downtime','active-giveaway','active-repack');
+  });
+  event.currentTarget.classList.add('active-' + mod);
+
+  // Hide selector, show panel
+  document.getElementById('module-selector').style.display = 'none';
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('visible'));
+  const panel = document.getElementById('panel-' + mod);
+  if (panel) { panel.classList.add('visible'); panel.style.display = 'block'; }
+
+  // Labor — reset state
+  if (mod === 'labor') {
+    lbDept = ''; lbShift = '';
+  } else {
+    // Load remembered user for other panels
+    const prefixMap = { waste:'wr', downtime:'dt', giveaway:'ga', repack:'rp', pounds:'pp' };
+    loadUser(prefixMap[mod] || 'wr');
+  }
+
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+function goHome() {
+  activeModule = null;
+  document.getElementById('module-selector').style.display = 'block';
+  document.querySelectorAll('.module-card').forEach(c => c.classList.remove('active-waste','active-downtime','active-giveaway','active-repack'));
+  document.querySelectorAll('.form-panel').forEach(p => { p.classList.remove('visible'); p.style.display = 'none'; });
+  document.getElementById('success-screen').style.display = 'none';
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+// ── LABOR HEADCOUNT ENTRY ────────────────────────────────────
+const LB_AVG_RATE  = 24.00;
+const SHIFT_HOURS  = 8.5; // Shift 1: 6:00am-2:30pm · Shift 2: 2:30pm-11:00pm
+
+const LB_DEPT_LINES = {
+  Packaging:   ['Line 1','Line 2','Line 3','Line 4','Line 5','Line 6','Line 7','Line 8','Line 9','Line 10','Peeler 1','Peeler 2','Peeler 3','Peeler 4','Peeler 5','Peeler 6','Peeler 7','Stick Cutter','Link Cutter'],
+  Formulation: ['Mixer 1','Mixer 2','Mixer 3','Grinder 1','Grinder 2','Grinder 3','Big Frozen Grinder','Emulsifier','Inspection Table'],
+  Kitchen:     ['Stuffer 1','Stuffer 2','Stuffer 3','Stuffer 4','Stuffer 5','Stuffer 6','Stuffer 7','Stuffer 8','Linker 1','Linker 2','Linker 3','Linker 4','Linker 5','Linker 6','Polyclip 1','Polyclip 2','Drencher 1','Drencher 2'],
+  Smokehouse:  ['House 1','House 2','House 3','House 4','House 5','House 6','House 7','House 8','House 9','House 10','House 11','House 12'],
+};
+
+function selectLbShift(el, shift) {
+  document.querySelectorAll('.lb-shift-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  lbShift = shift;
+}
+
+function selectLbDept(el, dept) {
+  document.querySelectorAll('.lb-dept-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  lbDept = dept;
+  renderLbLines(dept);
+}
+
+function renderLbLines(dept) {
+  const card = document.getElementById('lb-lines-card');
+  const sel  = document.getElementById('lb-line-select');
+  if (!card || !sel) return;
+  const lines = LB_DEPT_LINES[dept] || [];
+  card.style.display = 'block';
+  sel.innerHTML = '<option value="">Select line or machine...</option>' +
+    lines.map(l => `<option value="${l}">${l}</option>`).join('');
+}
+
+async function submitLabor() {
+  const user      = document.getElementById('lb-user').value.trim().toUpperCase();
+  const line      = document.getElementById('lb-line-select')?.value || '';
+  const headcount = parseInt(document.getElementById('lb-headcount-input')?.value) || 0;
+  const notes     = document.getElementById('lb-notes').value.trim();
+
+  if (!user)         return showError('lb-error', 'Please enter your name.');
+  if (!lbShift)      return showError('lb-error', 'Please select your shift.');
+  if (!lbDept)       return showError('lb-error', 'Please select your department.');
+  if (!line)         return showError('lb-error', 'Please select a line or machine.');
+  if (headcount === 0) return showError('lb-error', 'Please enter a headcount (use negative to remove people).');
+
+  const now = new Date();
+  const ref = genRef('LB');
+  saveUser('lb', user);
+
+  const totalHours   = headcount * SHIFT_HOURS;
+  const totalCost    = +(totalHours * LB_AVG_RATE).toFixed(2);
+
+  const entry = {
+    ref,
+    enteredAt:      now.toISOString(),
+    date:           now.toLocaleDateString('en-US'),
+    time:           now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),
+    user,
+    shift:          lbShift,
+    department:     lbDept,
+    line,
+    headcount,
+    shiftHours:     SHIFT_HOURS,
+    totalHours,
+    avgHourlyRate:  LB_AVG_RATE,
+    totalLaborCost: totalCost,
+    notes
+  };
+
+  const btn = document.querySelector('#panel-labor .submit-btn');
+  if (btn) { btn.textContent = 'Submitting...'; btn.disabled = true; }
+
+  try {
+    const res = await fetch(FLOW_URLS.labor, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    showSuccess('lb',
+      `${lbDept} · ${line} · Shift ${lbShift} · ${headcount} people · ${totalHours} hrs · $${totalCost.toFixed(2)}`,
+      ref);
+
+    // Reset
+    lbShift = ''; lbDept = '';
+    document.getElementById('lb-user').value = '';
+    document.getElementById('lb-headcount-input').value = '';
+    document.getElementById('lb-notes').value = '';
+    document.querySelectorAll('.lb-shift-btn.selected, .lb-dept-btn.selected').forEach(b => b.classList.remove('selected'));
+    const lc = document.getElementById('lb-lines-card');
+    if (lc) lc.style.display = 'none';
+
+  } catch(e) {
+    showError('lb-error', 'Submission failed. Check your connection and try again.');
+  } finally {
+    if (btn) { btn.textContent = 'Submit Labor Entry'; btn.disabled = false; }
+  }
+}
+
+// ── PACK LINES UOM TOGGLE ────────────────────────────────────
+let ppUom = 'cases'; // default
+
+function selectPpUom(el, uom) {
+  ppUom = uom;
+  document.querySelectorAll('#pp-uom-pills .pill').forEach(p => {
+    p.classList.remove('active');
+  });
+  if (el) el.classList.add('active');
+  const casesField = document.getElementById('pp-cases-field');
+  const lbsField   = document.getElementById('pp-lbs-field');
+  const lbsLabel   = document.getElementById('pp-lbs-label');
+  if (uom === 'cases') {
+    if (casesField) casesField.style.display = 'block';
+    if (lbsField)   lbsField.style.display   = 'none';
+  } else {
+    if (casesField) casesField.style.display = 'none';
+    if (lbsField)   lbsField.style.display   = 'block';
+    if (lbsLabel)   lbsLabel.innerHTML = 'Pounds Packed <span class="req">*</span>';
+  }
+}
+
+// Placeholder — will use real case weight from tbl_Products when connected
+const CASE_WEIGHTS = {}; // { 'SKU': lbs_per_case }
+
+function calcPackLineLbs() {
+  const cases   = parseFloat(document.getElementById('pp-cases').value) || 0;
+  const prod    = document.getElementById('pp-product').value.trim().toUpperCase();
+  const calcEl  = document.getElementById('pp-cases-calc');
+  const preview = document.getElementById('pp-cases-lbs-preview');
+  if (!calcEl || !preview) return;
+  if (cases > 0) {
+    calcEl.style.display = 'block';
+    // Look up case weight — placeholder until product workbook connected
+    const caseWt = CASE_WEIGHTS[prod] || null;
+    if (caseWt) {
+      const totalLbs = (cases * caseWt).toFixed(1);
+      preview.textContent = totalLbs + ' lbs';
+      // Auto-fill the lbs field
+      document.getElementById('pp-lbs').value = totalLbs;
+    } else {
+      preview.textContent = '--- (enter product SKU to calculate)';
+    }
+  } else {
+    calcEl.style.display = 'none';
+  }
+}
+
+// ── USER MEMORY ──────────────────────────────────────────────
+function loadUser(prefix) {
+  try {
+    const saved = localStorage.getItem(USER_KEYS[prefix]);
+    if (!saved) return;
+    const inputId = prefix + '-user';
+    const bannerId = prefix + '-remembered';
+    document.getElementById(inputId).value = saved;
+    const b = document.getElementById(bannerId);
+    if (b) b.style.display = 'flex';
+  } catch(e) {}
+}
+
+function saveUser(prefix, name) {
+  try { if (name) localStorage.setItem(USER_KEYS[prefix], name); } catch(e) {}
+}
+
+function clearUser(prefix) {
+  try { localStorage.removeItem(USER_KEYS[prefix]); } catch(e) {}
+  document.getElementById(prefix + '-user').value = '';
+  const b = document.getElementById(prefix + '-remembered');
+  if (b) b.style.display = 'none';
+}
+
+// ── PILL / GRID SELECTORS ────────────────────────────────────
+function selectPill(el, groupId, mod) {
+  document.querySelectorAll('#' + groupId + ' .pill').forEach(p =>
+    p.classList.remove('active-waste','active-downtime','active-giveaway','active-repack'));
+  el.classList.add('active-' + mod);
+
+  // Store value
+  const val = el.dataset.val;
+  if (groupId === 'wr-shift-pills')  wrShift  = val;
+  if (groupId === 'dt-shift-pills')  dtShift  = val;
+  if (groupId === 'ga-shift-pills')  gaShift  = val;
+  if (groupId === 'ga-dept-pills')   gaDept   = val;
+  if (groupId === 'lb-shift-pills')  lbShift = val;
+  if (groupId === 'lb-dept-pills')   { lbDept = val; renderLbLines(val); }
+  if (groupId === 'rp-shift-pills')  rpShift  = val;
+  if (groupId === 'pp-shift-pills')  ppShift     = val;
+  if (groupId === 'pp-op-pills')     {
+    ppOperation = val;
+    const machField  = document.getElementById('pp-machine-field');
+    const lineField  = document.getElementById('pp-line-field');
+    const uomField   = document.getElementById('pp-uom-field');
+    const casesField = document.getElementById('pp-cases-field');
+    const lbsField   = document.getElementById('pp-lbs-field');
+    if (val === 'Pack Lines') {
+      if (machField)  machField.style.display  = 'none';
+      if (lineField)  lineField.style.display  = 'block';
+      if (uomField)   uomField.style.display   = 'block';
+      document.getElementById('pp-machine').value = '';
+      // default to cases mode
+      const casesPill = document.querySelector('#pp-uom-pills .pill[data-val="cases"]');
+      if (casesPill) selectPpUom(casesPill, 'cases');
+    } else {
+      if (machField)  machField.style.display  = 'block';
+      if (lineField)  lineField.style.display  = 'none';
+      if (uomField)   uomField.style.display   = 'none';
+      if (casesField) casesField.style.display = 'none';
+      if (lbsField)   lbsField.style.display   = 'block';
+      const ppLineEl = document.getElementById('pp-line');
+      if (ppLineEl) ppLineEl.value = '';
+    }
+  }
+}
+
+function selectGridBtn(el, groupId, mod) {
+  document.querySelectorAll('#' + groupId + ' .grid-btn').forEach(b =>
+    b.classList.remove('active-waste','active-downtime','active-giveaway','active-repack'));
+  el.classList.add('active-' + mod);
+
+  const val = el.dataset.val;
+  if (groupId === 'wr-cat-grid')     wrCategory = val;
+  if (groupId === 'lb-hours-grid')   {
+    lbHours = val;
+    const customEl = document.getElementById('lb-hours-custom');
+    if (customEl) customEl.style.display = val === 'custom' ? 'block' : 'none';
+    calcLabor();
+  }
+  if (groupId === 'dt-reason-grid')  dtReason   = val;
+  if (groupId === 'rp-reason-grid')  rpReason   = val;
+}
+
+const WR_WASTE_CATS = [
+  'End of Run','Bone Collection','Changeover','Washout',
+  'Dropped','Leaker Check','Cutting / Peeling','Allergen Cont.',
+  'Color','No Twist','Peeler Damage','Food Safety',
+  'Chemistry','Sensory','Retains','Vendor Issue','Expired','Forklift Damage'
+];
+
+const WR_REWORK_CATS = [
+  'Color','Weight','Grease Out','Wrinkles',
+  'No Twist','Peeler Damage','Damaged','Cut Ends',
+  'Size','Air Pockets'
+];
+
+function wrSelectDisp(el) {
+  document.querySelectorAll('#wr-disp-pills .disp-pill').forEach(p =>
+    p.classList.remove('sel-waste','sel-rework'));
+  const map = { Waste:'sel-waste', Rework:'sel-rework' };
+  el.classList.add(map[el.dataset.val]);
+  wrDisposition = el.dataset.val;
+  wrCategory = '';
+
+  // Swap category grid
+  const isRework = wrDisposition === 'Rework';
+  const cats = isRework ? WR_REWORK_CATS : WR_WASTE_CATS;
+  const mod  = isRework ? 'downtime' : 'waste'; // gold for rework, red for waste
+
+  const grid = document.getElementById('wr-cat-grid');
+  grid.innerHTML = cats.map(c =>
+    `<div class="grid-btn" onclick="selectGridBtn(this,'wr-cat-grid','${mod}')" data-val="${c}">${c}</div>`
+  ).join('');
+
+  // Update lbs label color and show/hide lbs consumed
+  const lbsInput = document.getElementById('wr-lbs');
+  lbsInput.className = 'big-num ' + (isRework ? 'c-gold' : 'c-red');
+
+  const consumedField = document.getElementById('wr-lbs-consumed-field');
+  consumedField.style.display = isRework ? 'block' : 'none';
+  if (!isRework) document.getElementById('wr-lbs-consumed').value = '';
+}
+
+// ── LOCATION DROPDOWNS ───────────────────────────────────────
+function wrUpdateLocations() {
+  const dept = document.getElementById('wr-dept').value;
+  const sel  = document.getElementById('wr-location');
+  sel.innerHTML = '<option value="">Select location…</option>';
+  (WR_DEPT_LOCATIONS[dept] || []).forEach(l => {
+    const o = document.createElement('option'); o.value = o.textContent = l; sel.appendChild(o);
+  });
+}
+
+function dtUpdateLines() {
+  const dept = document.getElementById('dt-dept').value;
+  const sel  = document.getElementById('dt-line');
+  sel.innerHTML = '<option value="">Select line or machine…</option>';
+  (DEPT_LINES[dept] || []).forEach(l => {
+    const o = document.createElement('option'); o.value = o.textContent = l; sel.appendChild(o);
+  });
+}
+
+// ── GIVEAWAY CALCULATOR ──────────────────────────────────────
+function calcGiveaway() {
+  const units  = parseFloat(document.getElementById('ga-units').value) || 0;
+  const target = parseFloat(document.getElementById('ga-target-wt').value) || 0;
+  const actual = parseFloat(document.getElementById('ga-actual-wt').value) || 0;
+
+  if (units > 0 && target > 0 && actual > 0 && actual !== target) {
+    const overfill  = actual - target;
+    const totalLbs  = overfill * units;
+    const pct       = target > 0 ? ((overfill / target) * 100) : 0;
+
+    document.getElementById('ga-overfill').textContent  = overfill.toFixed(2) + ' g';
+    document.getElementById('ga-total-lbs').textContent = totalLbs.toFixed(2) + ' g';
+    document.getElementById('ga-pct').textContent       = pct.toFixed(2) + '%';
+    document.getElementById('ga-calc-field').style.display = 'block';
+  } else {
+    document.getElementById('ga-calc-field').style.display = 'none';
+  }
+}
+
+// Also recalculate when units or target change
+document.getElementById('ga-units').addEventListener('input', calcGiveaway);
+document.getElementById('ga-target-wt').addEventListener('input', calcGiveaway);
+
+// ── MINUTES QUICK-ADD ────────────────────────────────────────
+function addMins(n) {
+  const inp = document.getElementById('dt-minutes');
+  inp.value = Math.min(999, (parseInt(inp.value) || 0) + n);
+}
+
+// ── ERROR HANDLING ───────────────────────────────────────────
+function showError(id, msg) {
+  const b = document.getElementById(id);
+  b.textContent = msg; b.style.display = 'block';
+  b.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+function clearErrors() {
+  ['wr-error','dt-error','ga-error','rp-error','pp-error'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.style.display = 'none';
+  });
+}
+
+// ── REFERENCE ID ─────────────────────────────────────────────
+function genRef(prefix) {
+  const n = new Date();
+  const p = x => String(x).padStart(2,'0');
+  return prefix + '-' + String(n.getFullYear()).slice(2) + p(n.getMonth()+1) + p(n.getDate()) + '-' + p(n.getHours()) + p(n.getMinutes()) + p(n.getSeconds());
+}
+
+// ── SHOW SUCCESS ─────────────────────────────────────────────
+function showSuccess(icon, iconClass, title, titleClass, detail, ref, btnText, btnClass) {
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('visible'));
+  const ss = document.getElementById('success-screen');
+  ss.style.display = 'flex';
+  document.getElementById('succ-icon').className = 'success-icon ' + iconClass;
+  document.getElementById('succ-icon').textContent = icon;
+  document.getElementById('succ-title').className = 'success-title ' + titleClass;
+  document.getElementById('succ-title').textContent = title;
+  document.getElementById('succ-detail').textContent = detail;
+  document.getElementById('succ-ref').textContent = ref;
+  const btn = document.getElementById('succ-again-btn');
+  btn.textContent = btnText;
+  btn.className = 'add-another-btn ' + btnClass;
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+function addAnother() {
+  document.getElementById('success-screen').style.display = 'none';
+  const panel = document.getElementById('panel-' + activeModule);
+  if (panel) panel.classList.add('visible');
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+// ── SUBMIT: WASTE & REWORK ───────────────────────────────────
+async function submitWaste() {
+  clearErrors();
+  const user       = document.getElementById('wr-user').value.trim().toUpperCase();
+  const dept       = document.getElementById('wr-dept').value;
+  const prod       = document.getElementById('wr-product').value.trim().toUpperCase();
+  const batch      = document.getElementById('wr-batch').value.trim();
+  const lbs        = parseFloat(document.getElementById('wr-lbs').value);
+  const lbsConsumed= wrDisposition === 'Rework' ? parseFloat(document.getElementById('wr-lbs-consumed').value) : null;
+  const notes      = document.getElementById('wr-notes').value.trim();
+  const loc        = document.getElementById('wr-location').value;
+
+  if (!user)          return showError('wr-error','Please enter your name.');
+  if (!wrDisposition) return showError('wr-error','Please select a disposition — Waste or Rework.');
+  if (!wrShift)       return showError('wr-error','Please select your shift.');
+  if (!dept)          return showError('wr-error','Please select a department.');
+  if (!wrCategory)    return showError('wr-error','Please select a category.');
+  if (!lbs || lbs<=0) return showError('wr-error','Please enter a valid number of pounds.');
+
+  const now = new Date();
+  const ref = genRef(wrDisposition === 'Waste' ? 'WST' : 'RWK');
+  saveUser('wr', user);
+
+  const entry = { ref, enteredAt:now.toISOString(), date:now.toLocaleDateString('en-US'), time:now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}), user, disposition:wrDisposition, shift:wrShift, department:dept, location:loc, product:prod, batch, category:wrCategory, lbs, lbsConsumed, notes };
+
+  if (FLOW_URLS.waste !== 'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/21/workflows/51fb0b5cc0044dd4ad26f3fbc0e938c7/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=mWOTYcdTxWBN6DUqCl_XV15fNFVaAxz5GFbcKYO4kYc') {
+    try {
+      const r = await fetch(FLOW_URLS.waste, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(entry) });
+      if (!r.ok) throw new Error(r.status);
+    } catch(e) { return showError('wr-error','Submission failed. Check your connection and try again.'); }
+  } else { console.log('WR ENTRY (dev):', entry); }
+
+  const succColor = wrDisposition === 'Rework' ? 'c-gold' : 'c-red';
+  const succDetail = wrDisposition === 'Rework'
+    ? `${wrCategory} · ${dept} · Shift ${wrShift} · ${lbs} lbs rework · ${lbsConsumed} lbs consumed · ${user}`
+    : `${wrDisposition} · ${wrCategory} · ${dept} · Shift ${wrShift} · ${lbs} lbs · ${user}`;
+  if (wrDisposition === 'Rework') { /* rework lbs tracked separately */ }
+  else { statWaste += lbs; }
+  addSessionEntry(wrDisposition === 'Rework' ? '🔄' : '🗑️', wrDisposition === 'Rework' ? '#E8A020' : '#D4232E',
+    `${wrDisposition} · ${wrCategory} · ${lbs} lbs · ${dept}`, ref);
+  updateHomeStats();
+  showSuccess('✓', wrDisposition === 'Rework' ? 'si-downtime' : 'si-waste', 'Entry recorded', succColor, succDetail,
+    ref + ' · ' + now.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    `Add another ${wrDisposition} entry`, wrDisposition === 'Rework' ? 'btn-downtime' : 'btn-waste');
+}
+
+// ── SUBMIT: DOWNTIME ─────────────────────────────────────────
+async function submitDowntime() {
+  clearErrors();
+  const user  = document.getElementById('dt-user').value.trim().toUpperCase();
+  const dept  = document.getElementById('dt-dept').value;
+  const line  = document.getElementById('dt-line').value;
+  const mins  = parseInt(document.getElementById('dt-minutes').value);
+  const notes = document.getElementById('dt-notes').value.trim();
+
+  if (!user)        return showError('dt-error','Please enter your name.');
+  if (!dtShift)     return showError('dt-error','Please select your shift.');
+  if (!dept)        return showError('dt-error','Please select a department.');
+  if (!line)        return showError('dt-error','Please select a line or machine.');
+  if (!dtReason)    return showError('dt-error','Please select a downtime reason.');
+  if (!mins||mins<1)return showError('dt-error','Please enter a valid duration (minimum 1 minute).');
+
+  const now = new Date(); const ref = genRef('DT');
+  saveUser('dt', user);
+
+  const entry = {
+    'Reference ID':      ref,
+    'Entered At (ISO)':  now.toISOString(),
+    'Date':              now.toLocaleDateString('en-US'),
+    'Time':              now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+    'Employee Name':     user,
+    'Shift':             dtShift,
+    'Department':        dept,
+    'Line / Machine':    line,
+    'Reason':            dtReason,
+    'Minutes':           mins,
+    'Notes':             notes
+  };
+
+  if (FLOW_URLS.downtime !== 'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/14/workflows/e4f32dfa4cbe49eb9e4f8eda5e0eb961/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Bczv5tktvXGrU6-qKeJY26VhlF7B3tcvIWFE21Eoffo') {
+    try {
+      const r = await fetch(FLOW_URLS.downtime, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(entry) });
+      if (!r.ok) throw new Error(r.status);
+    } catch(e) { return showError('dt-error','Submission failed. Check your connection and try again.'); }
+  } else { console.log('DT ENTRY (dev):', entry); }
+
+  statDt += mins;
+  addSessionEntry('⏱️', '#D4A017', `${dtReason} · ${line} · ${mins} min`, ref);
+  updateHomeStats();
+  showSuccess('⏱️','si-downtime','Downtime recorded','c-gold',
+    `${dtReason} · ${line} · ${dept} · Shift ${dtShift} · ${mins} min · ${user}`,
+    ref + ' · ' + now.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    'Add another Downtime entry','btn-downtime');
+}
+
+// ── SUBMIT: GIVEAWAY ─────────────────────────────────────────
+async function submitGiveaway() {
+  clearErrors();
+  const user   = document.getElementById('ga-user').value.trim().toUpperCase();
+  const prod   = document.getElementById('ga-product').value.trim().toUpperCase();
+  const batch  = document.getElementById('ga-batch').value.trim();
+  const units  = parseInt(document.getElementById('ga-units').value);
+  const target = parseFloat(document.getElementById('ga-target-wt').value);
+  const actual = parseFloat(document.getElementById('ga-actual-wt').value);
+  const notes  = document.getElementById('ga-notes').value.trim();
+
+  if (!user)          return showError('ga-error','Please enter your name.');
+  if (!gaShift)       return showError('ga-error','Please select your shift.');
+  if (!gaDept)        return showError('ga-error','Please select a department.');
+  if (!prod)          return showError('ga-error','Please enter a product or SKU.');
+  if (!batch)         return showError('ga-error','Please enter a batch or lot number.');
+  if (!units||units<1)return showError('ga-error','Please enter the number of units.');
+  if (!target||target<=0)return showError('ga-error','Please enter the target weight per unit.');
+  if (!actual||actual<=0)return showError('ga-error','Please enter the average actual weight per unit.');
+  // allow any actual weight — under target means negative giveaway (under-fill)
+
+  const overfillG   = +(actual - target).toFixed(2); // negative = underfill
+  const totalGrams  = +(overfillG * units).toFixed(2);
+  const totalLbs    = +(totalGrams / 453.592).toFixed(4);
+  const pct         = +((overfillG / target) * 100).toFixed(3);
+
+  const now = new Date(); const ref = genRef('GA');
+  saveUser('ga', user);
+
+  const entry = {
+    'Reference ID':        ref,
+    'Entered At (ISO)':    now.toISOString(),
+    'Date':                now.toLocaleDateString('en-US'),
+    'Time':                now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+    'Employee Name':       user,
+    'Shift':               gaShift,
+    'Department':          gaDept,
+    'Product / SKU':       prod,
+    'Batch / Lot':         batch,
+    'Number of Units':     units,
+    'Target Weight (g)':   target,
+    'Actual Weight (g)':   actual,
+    'Overfill Per Unit (g)': overfillG,
+    'Total Giveaway (g)':  totalGrams,
+    'Total Giveaway (lbs)': totalLbs,
+    'Giveaway %':          pct,
+    'Notes':               notes
+  };
+
+  if (FLOW_URLS.giveaway !== 'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/10/workflows/ea0f7802ca734d699efc49fb8718f464/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VKDNVkTLWE3yoA-ClOyC9WBXzAESnQOfzzFX1OVEcnU') {
+    try {
+      const r = await fetch(FLOW_URLS.giveaway, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(entry) });
+      if (!r.ok) throw new Error(r.status);
+    } catch(e) { return showError('ga-error','Submission failed. Check your connection and try again.'); }
+  } else { console.log('GA ENTRY (dev):', entry); }
+
+  statGa += totalLbs;
+  addSessionEntry('⚖️', '#38BDF8', `${prod} · ${totalGrams}g over · ${gaDept}`, ref);
+  updateHomeStats();
+  showSuccess('⚖️','si-giveaway','Giveaway recorded','c-blue',
+    `${prod} · Batch ${batch} · ${units} units · ${totalLbs} lbs over (${pct}%) · ${gaDept} · Shift ${gaShift}`,
+    ref + ' · ' + now.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    'Add another Giveaway entry','btn-giveaway');
+}
+
+// ── SUBMIT: PROCESSED POUNDS ─────────────────────────────────
+async function submitPounds() {
+  clearErrors();
+  const user    = document.getElementById('pp-user').value.trim().toUpperCase();
+  const prod    = document.getElementById('pp-product').value.trim().toUpperCase();
+  const batch   = document.getElementById('pp-batch').value.trim();
+  const notes   = document.getElementById('pp-notes').value.trim();
+  const dept    = 'Packaging';
+
+  // machine or line depending on operation
+  let machine = '';
+  if (ppOperation === 'Pack Lines') {
+    machine = document.getElementById('pp-line').value;
+  } else {
+    machine = document.getElementById('pp-machine').value;
+  }
+
+  if (!user)           return showError('pp-error','Please enter your name.');
+  if (!ppShift)        return showError('pp-error','Please select your shift.');
+  if (!ppOperation)    return showError('pp-error','Please select an operation.');
+  if (!machine)        return showError('pp-error', ppOperation === 'Pack Lines' ? 'Please select a line.' : 'Please select a machine.');
+  if (!prod)           return showError('pp-error','Please enter a product or SKU.');
+
+  // For Pack Lines + cases mode, get lbs from auto-calc or require manual entry
+  let lbs, cases = null;
+  if (ppOperation === 'Pack Lines' && ppUom === 'cases') {
+    cases = parseFloat(document.getElementById('pp-cases').value);
+    if (!cases || cases <= 0) return showError('pp-error','Please enter number of cases.');
+    lbs = parseFloat(document.getElementById('pp-lbs').value) || 0;
+    // If no auto-calculated lbs, require manual lbs too
+    if (!lbs || lbs <= 0) return showError('pp-error','Case weight not found — please also enter pounds manually.');
+  } else {
+    lbs = parseFloat(document.getElementById('pp-lbs').value);
+    if (!lbs || lbs <= 0) return showError('pp-error','Please enter a valid number of pounds.');
+  }
+
+  const now = new Date(); const ref = genRef('PP');
+  saveUser('pp', user);
+
+  const entry = { ref, enteredAt:now.toISOString(), date:now.toLocaleDateString('en-US'), time:now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}), user, shift:ppShift, department:dept, operation:ppOperation, machine, product:prod, batch, lbs, cases: cases || null, notes };
+
+  if (FLOW_URLS.pounds !== 'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/05/workflows/b42b57d1014945fda66e2b590933c94f/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Jpq-82k0Znr9jh5O1hjjEmOD198cnvb8qZyGdlUYRUA') {
+    try {
+      const r = await fetch(FLOW_URLS.pounds, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(entry) });
+      if (!r.ok) throw new Error(r.status);
+    } catch(e) { return showError('pp-error','Submission failed. Check your connection and try again.'); }
+  } else { console.log('POUNDS ENTRY (dev):', entry); }
+
+  addSessionEntry('🏭','#38BDF8',`${prod} · ${lbs.toLocaleString()} lbs · ${ppOperation} · ${machine}`, ref);
+  updateHomeStats();
+  showSuccess('🏭','si-giveaway','Pounds recorded','c-blue',
+    `${ppOperation} · ${machine} · ${prod}${batch?' · Batch '+batch:''} · ${lbs.toLocaleString()} lbs · Shift ${ppShift} · ${user}`,
+    ref + ' · ' + now.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    'Add another Processed Pounds entry','btn-giveaway');
+}
+
+async function submitRepack() {
+  clearErrors();
+  const user  = document.getElementById('rp-user').value.trim().toUpperCase();
+  const dept  = 'Packaging';
+  const line  = document.getElementById('rp-line').value;
+  const prod  = document.getElementById('rp-product').value.trim().toUpperCase();
+  const batch = document.getElementById('rp-batch').value.trim();
+  const lbs   = parseFloat(document.getElementById('rp-lbs').value);
+  const notes = document.getElementById('rp-notes').value.trim();
+
+  if (!user)          return showError('rp-error','Please enter your name.');
+  if (!rpShift)       return showError('rp-error','Please select your shift.');
+  if (!line)          return showError('rp-error','Please select a line.');
+  if (!rpReason)      return showError('rp-error','Please select a repack reason.');
+  if (!lbs || lbs<=0) return showError('rp-error','Please enter a valid number of pounds.');
+
+  const now = new Date(); const ref = genRef('RPK');
+  saveUser('rp', user);
+
+  const entry = { ref, enteredAt:now.toISOString(), date:now.toLocaleDateString('en-US'), time:now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}), user, shift:rpShift, department:dept, line, product:prod, batch, reason:rpReason, lbs, notes };
+
+  if (FLOW_URLS.repack !== 'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/31/workflows/3b9bf807d8164b08961acc423e7a76e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=83nWA3ZEgFgPcREzooUJDg-HU8Us4fwQmxAK8fLfnV8') {
+    try {
+      const r = await fetch(FLOW_URLS.repack, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(entry) });
+      if (!r.ok) throw new Error(r.status);
+    } catch(e) { return showError('rp-error','Submission failed. Check your connection and try again.'); }
+  } else { console.log('REPACK ENTRY (dev):', entry); }
+
+  statRp += lbs;
+  addSessionEntry('📦', '#34D399', `${rpReason} · ${prod||'—'} · ${lbs} lbs`, ref);
+  updateHomeStats();
+  showSuccess('📦','si-repack','Repack recorded','c-teal',
+    `${rpReason} · ${prod||'—'} · ${dept} · Shift ${rpShift} · ${lbs} lbs · ${user}`,
+    ref + ' · ' + now.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    'Add another Repack entry','btn-repack');
+}
+</script>
+</body>
+</html>
