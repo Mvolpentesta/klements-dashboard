@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klement's — Meatball/Patty Cooler</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #070E18;
+  color: #EAF0F8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Nav ── */
+#nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 52px;
+  background: rgba(7,14,24,0.96);
+  border-bottom: 1px solid #1E3348;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  backdrop-filter: blur(10px);
+}
+#nav .brand { display: flex; align-items: center; gap: 10px; }
+#nav .brand-name { font-size: 15px; font-weight: 800; color: #EAF0F8; }
+#nav .brand-sub  { font-size: 11px; color: #4A6884; }
+#nav .refresh-btn {
+  padding: 6px 16px; border-radius: 8px;
+  border: 1.5px solid rgba(56,189,248,0.3);
+  background: rgba(56,189,248,0.08);
+  color: #38BDF8; font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s;
+}
+#nav .refresh-btn:hover { background: rgba(56,189,248,0.15); }
+#nav .add-btn {
+  padding: 6px 16px; border-radius: 8px;
+  border: 1.5px solid rgba(52,211,153,0.3);
+  background: rgba(52,211,153,0.08);
+  color: #34D399; font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s;
+}
+#nav .add-btn:hover { background: rgba(52,211,153,0.15); }
+
+/* ── Main ── */
+#main { padding: 68px 16px 24px; max-width: 1200px; margin: 0 auto; }
+
+/* ── Summary bar ── */
+#summary-bar {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.summary-tile {
+  background: #0D1824; border: 1px solid #1E3348; border-radius: 10px;
+  padding: 10px 16px; font-size: 12px;
+}
+.summary-tile .s-label { color: #4A6884; margin-bottom: 2px; }
+.summary-tile .s-val   { font-size: 18px; font-weight: 800; font-family: monospace; }
+
+/* ── Grid ── */
+#cooler-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+/* ── Card ── */
+.cooler-card {
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+  position: relative;
+}
+.cooler-card:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.cooler-card .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.cooler-card .card-sku    { font-size: 18px; font-weight: 900; font-family: monospace; color: #EAF0F8; }
+.cooler-card .card-badge  { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; }
+.cooler-card .card-batch  { font-size: 11px; color: #4A6884; margin-bottom: 10px; }
+.cooler-card .card-batch span { color: #8BAFC8; font-weight: 700; }
+.cooler-card .card-packdate { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
+.cooler-card .card-packdate-label { font-size: 11px; color: #4A6884; }
+.cooler-card .card-packdate-val   { font-size: 22px; font-weight: 800; font-family: monospace; }
+.cooler-card .card-lbs    { font-size: 30px; font-weight: 900; font-family: monospace; line-height: 1; }
+.cooler-card .card-lbs-label { font-size: 10px; color: #4A6884; margin-top: 2px; }
+.cooler-card .card-inout  {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; justify-content: space-between; font-size: 11px; color: #4A6884;
+}
+.cooler-card .card-inout .in-val  { color: #22C55E; font-weight: 700; font-family: monospace; }
+.cooler-card .card-inout .out-val { color: #EF4444; font-weight: 700; font-family: monospace; }
+.cooler-card .del-btn {
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+  color: #EF4444; border-radius: 5px; width: 22px; height: 22px;
+  font-size: 11px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; padding: 0;
+  flex-shrink: 0;
+}
+
+/* ── Spinner ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+#spinner {
+  display: none; flex-direction: column; align-items: center;
+  justify-content: center; padding: 60px 20px; gap: 16px; grid-column: 1/-1;
+}
+#spinner.active { display: flex; }
+.spin-ring {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 3px solid rgba(56,189,248,0.15);
+  border-top-color: #38BDF8;
+  animation: spin 0.8s linear infinite;
+}
+.spin-text { font-size: 13px; color: #4A6884; font-weight: 600; }
+
+/* ── Empty state ── */
+#empty-state {
+  display: none; flex-direction: column; align-items: center;
+  justify-content: center; padding: 60px 20px; gap: 10px; grid-column: 1/-1;
+}
+#empty-state.active { display: flex; }
+#empty-state .empty-icon { font-size: 48px; }
+#empty-state .empty-title { font-size: 16px; font-weight: 800; color: #EAF0F8; }
+#empty-state .empty-sub   { font-size: 12px; color: #4A6884; }
+
+/* ── Modal backdrop ── */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 600;
+  background: rgba(5,12,24,0.88);
+  align-items: center; justify-content: center; padding: 20px;
+}
+.modal-backdrop.active { display: flex; }
+.modal-box {
+  background: #121E2D; border: 1px solid #2E4D6A;
+  border-radius: 16px; width: 100%; max-width: 380px;
+  padding: 24px; box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+}
+.modal-title { font-size: 16px; font-weight: 800; color: #EAF0F8; margin-bottom: 4px; }
+.modal-sub   { font-size: 11px; color: #4A6884; margin-bottom: 20px; }
+.field-group { display: flex; flex-direction: column; gap: 12px; }
+.field-label { font-size: 11px; color: #4A6884; font-weight: 700; margin-bottom: 4px; }
+.field-input {
+  width: 100%; padding: 10px 12px; border-radius: 8px;
+  border: 1.5px solid #2A3F58; background: #0D1824;
+  color: #EAF0F8; font-size: 14px; outline: none;
+}
+.field-input:focus { border-color: #38BDF8; }
+.field-hint { font-size: 10px; color: #4A6884; margin-top: 3px; }
+.modal-error { font-size: 12px; color: #EF4444; display: none; margin-top: 4px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+.btn-cancel {
+  flex: 1; padding: 10px; border-radius: 8px;
+  border: 1.5px solid #2A3F58; background: transparent;
+  color: #4A6884; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.btn-save {
+  flex: 1; padding: 10px; border-radius: 8px; border: none;
+  background: linear-gradient(135deg,#34D399,#0E7A4A);
+  color: #fff; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-save.blue { background: linear-gradient(135deg,#38BDF8,#1D6A96); }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav id="nav">
+  <div class="brand">
+    <div>
+      <div class="brand-name">🥩 Meatball / Patty Cooler</div>
+      <div class="brand-sub">Klement's Sausage Co. — Live Inventory</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="refresh-btn" onclick="loadCooler()">↻ Refresh</button>
+    <button class="add-btn" onclick="openAddModal()">+ Add Item</button>
+  </div>
+</nav>
+
+<!-- Main -->
+<div id="main">
+  <!-- Summary bar -->
+  <div id="summary-bar"></div>
+
+  <!-- Grid -->
+  <div id="cooler-grid">
+    <div id="spinner" class="active">
+      <div class="spin-ring"></div>
+      <div class="spin-text">Loading inventory...</div>
+    </div>
+    <div id="empty-state">
+      <div class="empty-icon">🥩</div>
+      <div class="empty-title">Cooler is empty</div>
+      <div class="empty-sub">Use the + Add Item button to add products</div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div id="add-modal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-title">+ Add to Cooler</div>
+    <div class="modal-sub">Enter product details to add to the meatball/patty cooler</div>
+    <div class="field-group">
+      <div>
+        <div class="field-label">Product / Item # *</div>
+        <input id="add-product" class="field-input" placeholder="e.g. 66910">
+      </div>
+      <div>
+        <div class="field-label">Batch / Lot *</div>
+        <input id="add-batch" class="field-input" placeholder="e.g. 92037">
+      </div>
+      <div>
+        <div class="field-label">Pounds *</div>
+        <input id="add-lbs" class="field-input" type="number" placeholder="e.g. 5000">
+      </div>
+      <div>
+        <div class="field-label">Pack Date *</div>
+        <input id="add-packdate" class="field-input" type="date">
+        <div class="field-hint">Date the product was packed</div>
+      </div>
+      <div id="add-error" class="modal-error"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button id="add-save-btn" class="btn-save" onclick="submitAdd()">Add to Cooler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="edit-modal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-title">✏️ Edit Item</div>
+    <div class="modal-sub">Correct pounds, pack date, or batch for this product</div>
+    <div class="field-group">
+      <div>
+        <div class="field-label">Product / Item #</div>
+        <input id="edit-product" class="field-input">
+      </div>
+      <div>
+        <div class="field-label">Batch / Lot</div>
+        <input id="edit-batch" class="field-input">
+      </div>
+      <div>
+        <div class="field-label">Pack Date</div>
+        <input id="edit-packdate" class="field-input" type="date">
+      </div>
+      <div>
+        <div class="field-label">Corrected Net Pounds</div>
+        <input id="edit-lbs" class="field-input" type="number">
+        <div class="field-hint">Enter the true current pounds in cooler</div>
+      </div>
+      <input type="hidden" id="edit-orig-product">
+      <input type="hidden" id="edit-orig-batch">
+      <div id="edit-error" class="modal-error"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button id="edit-save-btn" class="btn-save blue" onclick="submitEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Flow URLs ─────────────────────────────────────────────────
+const MEATBALL_COOLER_URL = 'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/30/workflows/a7558dd1adbb49388b8fafedc0552d09/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Pu1GYhdEsuhGVkKtJDyQ_4XPQuI45z8ukL-dBhIoR0c';
+const MEATBALL_ENTRY_URL  = 'https://defaultdb253160ab67457388beb8abc0e20a.21.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/01/workflows/16c52f786de7484282cb53e3b6c7441b/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ZNEdBAuPNSvxSbpXs6L1NKd4IJXZe17hR-1ZGdIxbyw';
+
+// ── Helpers ───────────────────────────────────────────────────
+function genRef(prefix) {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return `${prefix}-${String(now.getFullYear()).slice(2)}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+}
+
+function parsePackDate(raw) {
+  if (!raw) return null;
+  const serial = parseFloat(raw);
+  if (!isNaN(serial) && serial > 40000 && serial < 60000) {
+    return new Date(Math.round((serial - 25569) * 86400000));
+  }
+  if (raw.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [y,m,d] = raw.split('-').map(Number);
+    return new Date(y, m-1, d, 12, 0, 0);
+  }
+  return new Date(raw);
+}
+
+function toDateInput(dateObj) {
+  if (!dateObj || isNaN(dateObj)) return '';
+  return dateObj.getFullYear() + '-' +
+    String(dateObj.getMonth()+1).padStart(2,'0') + '-' +
+    String(dateObj.getDate()).padStart(2,'0');
+}
+
+function formatPackDate(dateObj) {
+  if (!dateObj || isNaN(dateObj)) return '—';
+  return (dateObj.getMonth()+1) + '/' + String(dateObj.getDate()).padStart(2,'0');
+}
+
+function showSpinner() {
+  document.getElementById('spinner').classList.add('active');
+  document.getElementById('empty-state').classList.remove('active');
+  document.getElementById('cooler-grid').querySelectorAll('.cooler-card').forEach(c=>c.remove());
+}
+
+// ── Load Cooler ───────────────────────────────────────────────
+async function loadCooler() {
+  showSpinner();
+  try {
+    const res  = await fetch(MEATBALL_COOLER_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const rows     = data.rows     || [];
+    const packlines = data.packlines || [];
+
+    // Build inventory
+    const inventory = {};
+
+    rows.filter(r => (r['Operation']||'').trim() === 'Cooler').forEach(r => {
+      const product  = (r['Product/Sku']  || r['Product / SKU']  || '').trim();
+      const batch    = (r['Batch/Lot']    || r['Batch / Lot']    || '').trim();
+      if (!product || !batch) return;
+      const key      = product + '|' + batch;
+      const lbs      = parseFloat(r['Pounds (LBS)'] || 0);
+      const dateIn   = r['Entered At (ISO)'] || '';
+      const packDate = r['Pack Date'] || '';
+      if (!inventory[key]) {
+        inventory[key] = { product, batch, lbsIn: 0, lbsAdj: 0, lbsOut: 0, firstIn: dateIn, packDate };
+      } else {
+        if (dateIn && dateIn < inventory[key].firstIn) inventory[key].firstIn = dateIn;
+        if (packDate && !inventory[key].packDate) inventory[key].packDate = packDate;
+      }
+      inventory[key].lbsIn += lbs;
+    });
+
+    rows.filter(r => (r['Operation']||'').trim() === 'Cooler Adjustment').forEach(r => {
+      const product = (r['Product/Sku'] || r['Product / SKU'] || '').trim();
+      const batch   = (r['Batch/Lot']   || r['Batch / Lot']   || '').trim();
+      const key     = product + '|' + batch;
+      if (inventory[key]) inventory[key].lbsAdj += Math.abs(parseFloat(r['Pounds (LBS)'] || 0));
+    });
+
+    // Pack Lines from tbl_Pounds_Processed consume OUT
+    packlines.forEach(r => {
+      const product = (r['Product / SKU'] || '').trim();
+      const batch   = (r['Batch / Lot']   || '').trim();
+      const key     = product + '|' + batch;
+      if (inventory[key]) inventory[key].lbsOut += parseFloat(r['Pounds (LBS)'] || 0);
+    });
+
+    const items = Object.values(inventory).filter(i => (i.lbsIn - i.lbsAdj - i.lbsOut) > 0);
+
+    document.getElementById('spinner').classList.remove('active');
+
+    if (items.length === 0) {
+      document.getElementById('empty-state').classList.add('active');
+      document.getElementById('summary-bar').innerHTML = '';
+      return;
+    }
+
+    renderCards(items);
+
+  } catch(e) {
+    document.getElementById('spinner').classList.remove('active');
+    document.getElementById('cooler-grid').innerHTML +=
+      `<div style="color:#EF4444;font-size:13px;padding:30px;text-align:center;grid-column:1/-1;">
+        Error loading cooler: ${e.message}<br>
+        <button onclick="loadCooler()" style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid #EF4444;background:transparent;color:#EF4444;cursor:pointer;font-size:12px;">Retry</button>
+      </div>`;
+  }
+}
+
+// ── Render Cards ──────────────────────────────────────────────
+function renderCards(items) {
+  const grid    = document.getElementById('cooler-grid');
+  const summary = document.getElementById('summary-bar');
+  const now     = new Date();
+  let totalLbs = 0, greenCount = 0, yellowCount = 0, redCount = 0;
+
+  // Remove old cards
+  grid.querySelectorAll('.cooler-card').forEach(c => c.remove());
+  document.getElementById('empty-state').classList.remove('active');
+
+  items.forEach(item => {
+    const netLbs = item.lbsIn - item.lbsAdj - item.lbsOut;
+    totalLbs += netLbs;
+
+    // Parse pack date
+    const pd = parsePackDate(item.packDate);
+    const daysOld = pd && !isNaN(pd) ? Math.floor((now - pd) / 86400000) : 0;
+    const packDateDisplay = formatPackDate(pd);
+    const packDateISO     = toDateInput(pd);
+
+    // Color rules: green 0-7d, yellow 8-14d, red 15+
+    let bg, border, accent, badge;
+    if (daysOld <= 7) {
+      bg='rgba(34,197,94,0.08)'; border='rgba(34,197,94,0.35)'; accent='#22C55E';
+      badge = daysOld === 0 ? 'Today' : daysOld + 'd';
+      greenCount++;
+    } else if (daysOld <= 14) {
+      bg='rgba(245,158,11,0.08)'; border='rgba(245,158,11,0.35)'; accent='#F59E0B';
+      badge = daysOld + 'd';
+      yellowCount++;
+    } else {
+      bg='rgba(239,68,68,0.08)'; border='rgba(239,68,68,0.35)'; accent='#EF4444';
+      badge = daysOld + 'd ⚠';
+      redCount++;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'cooler-card';
+    card.style.background = bg;
+    card.style.border = '1.5px solid ' + border;
+    card.dataset.product   = item.product;
+    card.dataset.batch     = item.batch;
+    card.dataset.netlbs    = Math.round(netLbs);
+    card.dataset.packdate  = packDateISO;
+    card.dataset.lbsin     = Math.round(item.lbsIn);
+    card.dataset.lbsadj    = Math.round(item.lbsAdj);
+    card.dataset.lbsout    = Math.round(item.lbsOut);
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-sku">${item.product}</div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span class="card-badge" style="background:${accent}22;color:${accent};border:1px solid ${accent}66;">${badge}</span>
+          <button class="del-btn" title="Remove">✕</button>
+        </div>
+      </div>
+      <div class="card-batch">Batch: <span>${item.batch}</span></div>
+      <div class="card-packdate">
+        <div class="card-packdate-label">Packed</div>
+        <div class="card-packdate-val" style="color:${accent};">${packDateDisplay}</div>
+      </div>
+      <div class="card-lbs" style="color:${accent};">${Math.round(netLbs).toLocaleString()}</div>
+      <div class="card-lbs-label">lbs remaining</div>
+      <div class="card-inout">
+        <span>In: <span class="in-val">${Math.round(item.lbsIn).toLocaleString()}</span></span>
+        <span>Out: <span class="out-val">${Math.round(item.lbsOut).toLocaleString()}</span></span>
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+
+  // Summary bar
+  summary.innerHTML = `
+    <div class="summary-tile">
+      <div class="s-label">Total Lbs</div>
+      <div class="s-val" style="color:#38BDF8;">${Math.round(totalLbs).toLocaleString()}</div>
+    </div>
+    <div class="summary-tile">
+      <div class="s-label">Items</div>
+      <div class="s-val" style="color:#EAF0F8;">${items.length}</div>
+    </div>
+    <div class="summary-tile">
+      <div class="s-label">Fresh (0–7d)</div>
+      <div class="s-val" style="color:#22C55E;">${greenCount}</div>
+    </div>
+    ${yellowCount ? `<div class="summary-tile">
+      <div class="s-label">8–14 Days</div>
+      <div class="s-val" style="color:#F59E0B;">${yellowCount}</div>
+    </div>` : ''}
+    ${redCount ? `<div class="summary-tile">
+      <div class="s-label">15+ Days</div>
+      <div class="s-val" style="color:#EF4444;">${redCount}</div>
+    </div>` : ''}
+  `;
+}
+
+// ── Add Modal ─────────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('add-product').value  = '';
+  document.getElementById('add-batch').value    = '';
+  document.getElementById('add-lbs').value      = '';
+  const now = new Date();
+  document.getElementById('add-packdate').value = toDateInput(now);
+  document.getElementById('add-error').style.display = 'none';
+  document.getElementById('add-modal').classList.add('active');
+  document.getElementById('add-product').focus();
+}
+function closeAddModal() {
+  document.getElementById('add-modal').classList.remove('active');
+}
+
+async function submitAdd() {
+  const product  = document.getElementById('add-product').value.trim().toUpperCase();
+  const batch    = document.getElementById('add-batch').value.trim();
+  const lbs      = parseFloat(document.getElementById('add-lbs').value);
+  const packDate = document.getElementById('add-packdate').value;
+  const errEl    = document.getElementById('add-error');
+
+  if (!product || !batch || isNaN(lbs) || lbs <= 0 || !packDate) {
+    errEl.textContent = 'Please fill in all fields.';
+    errEl.style.display = 'block'; return;
+  }
+
+  const btn = document.getElementById('add-save-btn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+
+  try {
+    const now = new Date();
+    const res = await fetch(MEATBALL_ENTRY_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ref: genRef('MB'), enteredAt: now.toISOString(),
+        date: now.toLocaleDateString('en-US'),
+        time: now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),
+        user: 'COOLER APP', department: 'Packaging', operation: 'Cooler',
+        product, batch, lbs, packDate, notes: 'Added via Meatball Cooler App'
+      })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    closeAddModal();
+    showSpinner();
+    setTimeout(() => loadCooler(), 2000);
+  } catch(e) {
+    errEl.textContent = 'Save failed: ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = 'Add to Cooler'; btn.disabled = false;
+  }
+}
+
+// ── Edit Modal ────────────────────────────────────────────────
+function openEditModal(product, batch, netLbs, packDate) {
+  document.getElementById('edit-product').value      = product;
+  document.getElementById('edit-batch').value        = batch;
+  document.getElementById('edit-lbs').value          = netLbs;
+  document.getElementById('edit-packdate').value     = packDate || '';
+  document.getElementById('edit-orig-product').value = product;
+  document.getElementById('edit-orig-batch').value   = batch;
+  document.getElementById('edit-error').style.display = 'none';
+  document.getElementById('edit-modal').classList.add('active');
+}
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('active');
+}
+
+async function submitEdit() {
+  const newProduct  = document.getElementById('edit-product').value.trim().toUpperCase();
+  const newBatch    = document.getElementById('edit-batch').value.trim();
+  const newLbs      = parseFloat(document.getElementById('edit-lbs').value);
+  const newPackDate = document.getElementById('edit-packdate').value;
+  const origProduct = document.getElementById('edit-orig-product').value;
+  const origBatch   = document.getElementById('edit-orig-batch').value;
+  const errEl       = document.getElementById('edit-error');
+
+  if (!newProduct || !newBatch || isNaN(newLbs) || newLbs < 0) {
+    errEl.textContent = 'Please fill in all fields.';
+    errEl.style.display = 'block'; return;
+  }
+
+  const btn = document.getElementById('edit-save-btn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+
+  try {
+    // Get current inventory to zero out
+    const res  = await fetch(MEATBALL_COOLER_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    if (!res.ok) throw new Error('Inventory fetch failed');
+    const data = await res.json();
+    const rows = data.rows || [];
+
+    const inR  = rows.filter(r => (r['Operation']||'').trim()==='Cooler' &&
+      (r['Product/Sku']||r['Product / SKU']||'').trim()===origProduct &&
+      (r['Batch/Lot']||r['Batch / Lot']||'').trim()===origBatch);
+    const adjR = rows.filter(r => (r['Operation']||'').trim()==='Cooler Adjustment' &&
+      (r['Product/Sku']||r['Product / SKU']||'').trim()===origProduct &&
+      (r['Batch/Lot']||r['Batch / Lot']||'').trim()===origBatch);
+
+    const currentNet = inR.reduce((s,r)=>s+parseFloat(r['Pounds (LBS)']||0),0) -
+                       adjR.reduce((s,r)=>s+Math.abs(parseFloat(r['Pounds (LBS)']||0)),0);
+
+    const now = new Date();
+
+    // Zero out existing
+    if (currentNet > 0) {
+      const r1 = await fetch(MEATBALL_ENTRY_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          ref: genRef('MB'), enteredAt: now.toISOString(),
+          date: now.toLocaleDateString('en-US'),
+          time: now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+          user:'COOLER APP', department:'Packaging', operation:'Cooler Adjustment',
+          product: origProduct, batch: origBatch, lbs: -Math.abs(currentNet),
+          packDate: '', notes: 'Corrected via Meatball Cooler App'
+        })
+      });
+      if (!r1.ok) throw new Error('Adjustment failed');
+    }
+
+    // Write corrected entry
+    const r2 = await fetch(MEATBALL_ENTRY_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        ref: genRef('MB'), enteredAt: now.toISOString(),
+        date: now.toLocaleDateString('en-US'),
+        time: now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+        user:'COOLER APP', department:'Packaging', operation:'Cooler',
+        product: newProduct, batch: newBatch, lbs: newLbs,
+        packDate: newPackDate, notes: 'Corrected via Meatball Cooler App'
+      })
+    });
+    if (!r2.ok) throw new Error('Write failed');
+
+    closeEditModal();
+    showSpinner();
+    setTimeout(() => loadCooler(), 2000);
+
+  } catch(e) {
+    errEl.textContent = 'Save failed: ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = 'Save Changes'; btn.disabled = false;
+  }
+}
+
+// ── Delete ────────────────────────────────────────────────────
+async function deleteItem(product, batch) {
+  if (!confirm(`Remove ${product} / ${batch} from cooler?`)) return;
+
+  // Hide card immediately
+  document.querySelectorAll('.cooler-card').forEach(c => {
+    if (c.dataset.product === product && c.dataset.batch === batch) {
+      c.style.opacity = '0.3'; c.style.pointerEvents = 'none';
+    }
+  });
+
+  try {
+    const res  = await fetch(MEATBALL_COOLER_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    const data = await res.json();
+    const rows = data.rows || [];
+
+    const inR  = rows.filter(r=>(r['Operation']||'').trim()==='Cooler'&&
+      (r['Product/Sku']||r['Product / SKU']||'').trim()===product&&
+      (r['Batch/Lot']||r['Batch / Lot']||'').trim()===batch);
+    const adjR = rows.filter(r=>(r['Operation']||'').trim()==='Cooler Adjustment'&&
+      (r['Product/Sku']||r['Product / SKU']||'').trim()===product&&
+      (r['Batch/Lot']||r['Batch / Lot']||'').trim()===batch);
+
+    const currentNet = inR.reduce((s,r)=>s+parseFloat(r['Pounds (LBS)']||0),0) -
+                       adjR.reduce((s,r)=>s+Math.abs(parseFloat(r['Pounds (LBS)']||0)),0);
+
+    if (currentNet > 0) {
+      const now = new Date();
+      await fetch(MEATBALL_ENTRY_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          ref: genRef('MB'), enteredAt: now.toISOString(),
+          date: now.toLocaleDateString('en-US'),
+          time: now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+          user:'COOLER APP', department:'Packaging', operation:'Cooler Adjustment',
+          product, batch, lbs: -Math.abs(currentNet),
+          packDate: '', notes: 'Removed via Meatball Cooler App'
+        })
+      });
+    }
+
+    setTimeout(() => loadCooler(), 2000);
+
+  } catch(e) {
+    console.error('Delete failed:', e);
+    loadCooler();
+  }
+}
+
+// ── Grid click delegation (delete + edit) ────────────────────
+document.getElementById('cooler-grid').addEventListener('click', function(e) {
+  const delBtn = e.target.closest('.del-btn');
+  if (delBtn) {
+    e.stopPropagation();
+    const card = delBtn.closest('.cooler-card');
+    if (card) deleteItem(card.dataset.product, card.dataset.batch);
+    return;
+  }
+  const card = e.target.closest('.cooler-card');
+  if (card) openEditModal(card.dataset.product, card.dataset.batch, card.dataset.netlbs, card.dataset.packdate);
+});
+
+// ── Close modals on backdrop click ────────────────────────────
+document.getElementById('add-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddModal();
+});
+document.getElementById('edit-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeEditModal();
+});
+
+// ── Auto-refresh every 5 minutes ─────────────────────────────
+setInterval(() => loadCooler(), 5 * 60 * 1000);
+
+// ── Initial load ──────────────────────────────────────────────
+loadCooler();
+</script>
+</body>
+</html>
