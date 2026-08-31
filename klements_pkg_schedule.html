@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Packaging Schedule — Klement's</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #06101C;
+  --surface:   #0D1824;
+  --surface2:  #121E2D;
+  --border:    #1E3348;
+  --border2:   #2A3F58;
+  --text:      #EAF0F8;
+  --muted:     #4A6884;
+  --muted2:    #8BAFC8;
+  --mono:      'Courier New', monospace;
+
+  --l1: #38BDF8; --l2: #34D399; --l3: #FB923C; --l4: #A78BFA;
+  --l5: #F472B6; --l6: #FBBF24; --l7: #22D3EE; --l8: #4ADE80;
+  --l9: #F87171; --l10:#C084FC; --l11:#E8A020; --l12:#EF4444;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+}
+
+/* ── Nav ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; height: 52px;
+  background: var(--bg); border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px;
+  gap: 16px; z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.6);
+}
+.nav-brand { font-size: 15px; font-weight: 800; color: var(--text); }
+.nav-sub   { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.nav-spacer{ flex: 1; }
+.nav-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; border: 1px solid rgba(56,189,248,0.4);
+  background: rgba(56,189,248,0.08); color: #38BDF8;
+  letter-spacing: 0.05em;
+}
+#clock { font-size: 13px; font-weight: 700; color: var(--muted2); font-family: var(--mono); }
+
+/* ── Layout ── */
+.app {
+  padding-top: 68px;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 0;
+  min-height: 100vh;
+}
+
+/* ── Left panel — unassigned pool ── */
+.pool-panel {
+  background: var(--surface);
+  border-right: 1.5px solid var(--border);
+  padding: 16px 12px;
+  position: sticky; top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.pool-title {
+  font-size: 11px; font-weight: 800; color: var(--muted);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.pool-count {
+  font-size: 18px; font-weight: 900; color: var(--text);
+  font-family: var(--mono); display: inline; margin-right: 6px;
+}
+.pool-drop {
+  min-height: 120px;
+  border: 1.5px dashed var(--border2);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex; flex-direction: column; gap: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pool-drop.drag-over {
+  border-color: #38BDF8;
+  background: rgba(56,189,248,0.05);
+}
+.add-btn {
+  width: 100%; padding: 10px; margin-top: 12px;
+  border: 1.5px dashed var(--border2);
+  border-radius: 8px; background: transparent;
+  color: var(--muted); font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+}
+.add-btn:hover { border-color: #38BDF8; color: #38BDF8; background: rgba(56,189,248,0.05); }
+
+/* ── Right panel — lines ── */
+.lines-panel {
+  padding: 16px;
+  overflow-y: auto;
+}
+.lines-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.lines-title { font-size: 18px; font-weight: 900; color: var(--text); }
+.lines-date  { font-size: 12px; color: var(--muted); }
+
+.line-row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 0;
+  margin-bottom: 8px;
+  min-height: 90px;
+}
+.line-label {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border-radius: 10px 0 0 10px;
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.06em;
+  border: 1.5px solid;
+  border-right: none;
+  gap: 2px;
+}
+.line-label .ln { font-size: 9px; opacity: 0.7; }
+.line-label .lnum { font-size: 20px; font-weight: 900; font-family: var(--mono); }
+
+.line-drop {
+  border: 1.5px solid var(--border);
+  border-radius: 0 10px 10px 0;
+  padding: 8px;
+  display: flex; flex-wrap: wrap; gap: 8px;
+  align-items: flex-start; align-content: flex-start;
+  min-height: 90px;
+  background: var(--surface);
+  transition: border-color 0.15s, background 0.15s;
+}
+.line-drop.drag-over {
+  border-color: #38BDF8;
+  background: rgba(56,189,248,0.04);
+}
+.line-drop-empty {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; color: var(--border2);
+  font-size: 11px; font-style: italic;
+  pointer-events: none;
+}
+
+/* ── Product card ── */
+.pkg-card {
+  width: 160px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.1s, box-shadow 0.1s, opacity 0.1s;
+  position: relative;
+}
+.pkg-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+.pkg-card.dragging { opacity: 0.4; cursor: grabbing; transform: scale(0.97); }
+.pkg-card.ghost {
+  opacity: 0.85;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  cursor: grabbing;
+  pointer-events: none;
+  position: fixed;
+  z-index: 9999;
+  transform: rotate(2deg) scale(1.03);
+}
+
+.card-sku   { font-size: 16px; font-weight: 900; color: var(--text); font-family: var(--mono); margin-bottom: 3px; }
+.card-batch { font-size: 10px; color: var(--muted); margin-bottom:  8px; }
+.card-lbs   { font-size: 20px; font-weight: 900; font-family: var(--mono); line-height: 1; }
+.card-unit  { font-size: 9px; color: var(--muted); margin-top: 1px; }
+.card-age   {
+  display: inline-block; margin-top: 8px;
+  font-size: 9px; font-weight: 800; padding: 2px 7px;
+  border-radius: 4px;
+}
+.card-del {
+  position: absolute; top: 6px; right: 6px;
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
+  color: #EF4444; border-radius: 4px; width: 18px; height: 18px;
+  font-size: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.15s;
+}
+.pkg-card:hover .card-del { opacity: 1; }
+
+/* ── Modal ── */
+.modal-bg {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(5,12,24,0.88);
+  align-items: center; justify-content: center; padding: 20px;
+}
+.modal-bg.active { display: flex; }
+.modal {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 16px; width: 100%; max-width: 360px; padding: 24px;
+}
+.modal-title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+.modal-sub   { font-size: 11px; color: var(--muted); margin-bottom: 20px; }
+.field-label { font-size: 11px; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+.field-input {
+  width: 100%; padding: 10px 12px; border-radius: 8px;
+  border: 1.5px solid var(--border2); background: var(--surface);
+  color: var(--text); font-size: 14px; outline: none;
+  margin-bottom: 12px;
+}
+.field-input:focus { border-color: #38BDF8; }
+.modal-btns { display: flex; gap: 10px; margin-top: 4px; }
+.btn-cancel {
+  flex: 1; padding: 10px; border-radius: 8px;
+  border: 1.5px solid var(--border2); background: transparent;
+  color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.btn-add {
+  flex: 1; padding: 10px; border-radius: 8px;
+  border: none; background: linear-gradient(135deg,#38BDF8,#1D6A96);
+  color: #fff; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.modal-error { font-size: 11px; color: #EF4444; margin-bottom: 8px; display: none; }
+
+/* ── Clear all btn ── */
+.clear-btn {
+  padding: 6px 14px; border-radius: 8px;
+  border: 1.5px solid var(--border2); background: transparent;
+  color: var(--muted); font-size: 11px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s;
+}
+.clear-btn:hover { border-color: #EF4444; color: #EF4444; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div>
+    <div class="nav-brand">🧊 Packaging Schedule</div>
+    <div class="nav-sub">Klement's Sausage Co. — Line Assignment</div>
+  </div>
+  <div class="nav-spacer"></div>
+  <span id="save-status" style="font-size:11px;color:#34D399;font-weight:700;opacity:0;transition:opacity 0.4s;"></span>
+  <span id="clock"></span>
+  <span class="nav-badge">LIVE</span>
+</nav>
+
+<div class="app">
+
+  <!-- Left: unassigned pool -->
+  <aside class="pool-panel">
+    <div class="pool-title">
+      <span class="pool-count" id="pool-count">0</span> Unassigned
+    </div>
+    <div class="pool-drop" id="pool-drop" data-zone="pool"></div>
+    <button class="add-btn" onclick="openAddModal()">+ Add Product</button>
+  </aside>
+
+  <!-- Right: 10 lines -->
+  <main class="lines-panel">
+    <div class="lines-header">
+      <div>
+        <div class="lines-title">Line Assignment</div>
+        <div class="lines-date" id="schedule-date"></div>
+      </div>
+      <button class="clear-btn" onclick="clearAll()">Clear All</button>
+    </div>
+
+    <div id="lines-container"></div>
+  </main>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal-bg" id="add-modal">
+  <div class="modal">
+    <div class="modal-title">Add Product to Schedule</div>
+    <div class="modal-sub">Product will appear in the unassigned pool</div>
+    <div class="field-label">Product / SKU</div>
+    <input class="field-input" id="m-sku" placeholder="e.g. 66910">
+    <div class="field-label">Batch / Lot</div>
+    <input class="field-input" id="m-batch" placeholder="e.g. 92037">
+    <div class="field-label">Pounds</div>
+    <input class="field-input" id="m-lbs" type="number" placeholder="e.g. 5000">
+    <div class="field-label">Days in Cooler</div>
+    <input class="field-input" id="m-days" type="number" placeholder="e.g. 2" min="0">
+    <div class="modal-error" id="m-error"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-add" onclick="submitAdd()">Add to Schedule</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────
+const LINE_COLORS = [
+  'var(--l1)','var(--l2)','var(--l3)','var(--l4)','var(--l5)',
+  'var(--l6)','var(--l7)','var(--l8)','var(--l9)','var(--l10)',
+  'var(--l11)','var(--l12)'
+];
+
+const LINE_LABELS = {
+  1:'1', 2:'2', 3:'3', 4:'4', 5:'5',
+  6:'6', 7:'7', 8:'8', 9:'9', 10:'10',
+  11:'DISPLAY', 12:'QA'
+};
+const LINE_SUBLABELS = {
+  1:'LINE', 2:'LINE', 3:'LINE', 4:'LINE', 5:'LINE',
+  6:'LINE', 7:'LINE', 8:'LINE', 9:'LINE', 10:'LINE',
+  11:'PALLETS', 12:'PALLETS'
+};
+
+let schedule = {
+  pool: [],
+  lines: { 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[], 8:[], 9:[], 10:[], 11:[], 12:[] }
+};
+
+let dragCard = null;    // the card element being dragged
+let ghostEl  = null;    // floating ghost
+let dragData = null;    // { id, fromZone }
+
+// ── GitHub Storage ─────────────────────────────────────────────
+const GH_TOKEN  = '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';
+const GH_OWNER  = 'Mvolpentesta';
+const GH_REPO   = 'klements-dashboard';
+const GH_BRANCH = 'main';
+const GH_FILE   = 'pkg_schedule.json';
+const GH_API    = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+
+let ghFileSha = null; // needed for updates
+
+async function loadFromGitHub() {
+  try {
+    const res = await fetch(GH_API + '?ref=' + GH_BRANCH, {
+      headers: { 'Authorization': 'token ' + GH_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (res.status === 404) {
+      console.log('No schedule file yet — starting fresh');
+      return;
+    }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    ghFileSha = data.sha;
+    const decoded = JSON.parse(atob(data.content.replace(/\n/g,'')));
+    if (decoded && decoded.pool !== undefined) {
+      schedule = decoded;
+      console.log('Schedule loaded from GitHub');
+    }
+  } catch(e) {
+    console.warn('GitHub load failed:', e.message);
+    // Fall back to localStorage
+    loadFromLocal();
+  }
+}
+
+async function saveToGitHub() {
+  try {
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(schedule, null, 2))));
+    const body = {
+      message: 'Update packaging schedule',
+      content,
+      branch: GH_BRANCH
+    };
+    if (ghFileSha) body.sha = ghFileSha;
+
+    const res = await fetch(GH_API, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + GH_TOKEN,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    ghFileSha = data.content.sha;
+    console.log('Schedule saved to GitHub');
+    showSaveStatus('Saved ✓');
+  } catch(e) {
+    console.warn('GitHub save failed:', e.message);
+    saveToLocal();
+    showSaveStatus('Saved locally');
+  }
+}
+
+function saveToLocal() {
+  try { localStorage.setItem('kl_pkg_schedule', JSON.stringify(schedule)); } catch(e){}
+}
+function loadFromLocal() {
+  try {
+    const s = localStorage.getItem('kl_pkg_schedule');
+    if (s) schedule = JSON.parse(s);
+  } catch(e){}
+}
+
+function showSaveStatus(msg) {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, 2000);
+}
+
+// ── Load / Save (replaces old versions) ───────────────────────
+function saveSchedule() {
+  saveToLocal(); // instant local save
+  saveToGitHub(); // async GitHub save
+}
+function loadSchedule() {
+  loadFromLocal(); // show something immediately
+  loadFromGitHub().then(() => render()); // then update from GitHub
+}
+
+// ── Card data ──────────────────────────────────────────────────
+function makeCard(sku, batch, lbs, days) {
+  return { id: 'c' + Date.now() + Math.random().toString(36).slice(2,6), sku, batch, lbs: parseFloat(lbs)||0, days: parseInt(days)||0 };
+}
+
+function cardColor(days) {
+  if (days <= 2) return { accent: '#22C55E', bg: 'rgba(34,197,94,0.1)',  border: 'rgba(34,197,94,0.35)'  };
+  if (days === 3) return { accent: '#F59E0B', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.35)' };
+  return              { accent: '#EF4444', bg: 'rgba(239,68,68,0.1)',   border: 'rgba(239,68,68,0.35)'  };
+}
+
+function buildCardEl(card) {
+  const c = cardColor(card.days);
+  const el = document.createElement('div');
+  el.className = 'pkg-card';
+  el.dataset.id = card.id;
+  el.style.borderColor = c.border;
+  el.style.background  = c.bg;
+  el.draggable = true;
+  el.innerHTML = `
+    <button class="card-del" onclick="event.stopPropagation();removeCard('${card.id}')" title="Remove">✕</button>
+    <div class="card-sku">${card.sku}</div>
+    <div class="card-batch">Batch: ${card.batch}</div>
+    <div class="card-lbs" style="color:${c.accent}">${Math.round(card.lbs).toLocaleString()}</div>
+    <div class="card-unit">lbs</div>
+    <span class="card-age" style="background:${c.accent}22;color:${c.accent};border:1px solid ${c.accent}55;">
+      ${card.days === 0 ? 'Today' : card.days + 'd in cooler'}
+    </span>`;
+
+  el.addEventListener('dragstart', e => onDragStart(e, card.id));
+  el.addEventListener('dragend',   e => onDragEnd(e));
+  return el;
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function render() {
+  // Pool
+  const pool = document.getElementById('pool-drop');
+  pool.innerHTML = '';
+  schedule.pool.forEach(card => pool.appendChild(buildCardEl(card)));
+  if (!schedule.pool.length) {
+    pool.innerHTML = '<div class="line-drop-empty" style="padding:20px 0;">Drag cards here or add a product</div>';
+  }
+  document.getElementById('pool-count').textContent = schedule.pool.length;
+
+  // Lines
+  const container = document.getElementById('lines-container');
+  container.innerHTML = '';
+  for (let i = 1; i <= 12; i++) {
+    // Add divider before line 11
+    if (i === 11) {
+      const divider = document.createElement('div');
+      divider.style.cssText = 'margin:16px 0 12px;padding-top:16px;border-top:1.5px solid var(--border);display:flex;align-items:center;gap:10px;';
+      divider.innerHTML = '<span style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">Special Locations</span>';
+      container.appendChild(divider);
+    }
+
+    const col   = LINE_COLORS[i-1];
+    const cards = schedule.lines[i] || [];
+    const row   = document.createElement('div');
+    row.className = 'line-row';
+
+    const label = document.createElement('div');
+    label.className = 'line-label';
+    label.style.cssText = `color:${col};border-color:${col}33;background:${col}0D;`;
+    // Use custom labels for 11 and 12
+    const lnum = LINE_LABELS[i] || String(i);
+    const lsub = LINE_SUBLABELS[i] || 'LINE';
+    const isSpecial = i >= 11;
+    label.innerHTML = isSpecial
+      ? `<span class="ln">${lsub}</span><span class="lnum" style="font-size:13px;font-weight:900;letter-spacing:0.04em;">${lnum}</span>`
+      : `<span class="ln">LINE</span><span class="lnum">${lnum}</span>`;
+
+    const drop = document.createElement('div');
+    drop.className = 'line-drop';
+    drop.dataset.zone = 'line-' + i;
+
+    const emptyMsg = i === 11 ? 'Drop display pallets here' : i === 12 ? 'Drop QA pallets here' : 'Drop product here';
+    if (!cards.length) {
+      drop.innerHTML = `<div class="line-drop-empty">${emptyMsg}</div>`;
+    } else {
+      cards.forEach(card => drop.appendChild(buildCardEl(card)));
+    }
+
+    wireDropZone(drop);
+    row.appendChild(label);
+    row.appendChild(drop);
+    container.appendChild(row);
+  }
+
+  // Wire pool drop zone
+  wireDropZone(document.getElementById('pool-drop'));
+  saveSchedule();
+}
+
+// ── Drag & Drop ────────────────────────────────────────────────
+function findCard(id) {
+  const inPool = schedule.pool.find(c => c.id === id);
+  if (inPool) return { card: inPool, zone: 'pool' };
+  for (let i = 1; i <= 12; i++) {
+    const found = (schedule.lines[i] || []).find(c => c.id === id);
+    if (found) return { card: found, zone: 'line-' + i };
+  }
+  return null;
+}
+
+function removeFromZone(id, zone) {
+  if (zone === 'pool') {
+    schedule.pool = schedule.pool.filter(c => c.id !== id);
+  } else {
+    const lineNum = parseInt(zone.replace('line-', ''));
+    schedule.lines[lineNum] = (schedule.lines[lineNum] || []).filter(c => c.id !== id);
+  }
+}
+
+function addToZone(card, zone) {
+  if (zone === 'pool') {
+    schedule.pool.push(card);
+  } else {
+    const lineNum = parseInt(zone.replace('line-', ''));
+    if (!schedule.lines[lineNum]) schedule.lines[lineNum] = [];
+    schedule.lines[lineNum].push(card);
+  }
+}
+
+function onDragStart(e, cardId) {
+  dragData = cardId;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', cardId);
+  setTimeout(() => {
+    const el = document.querySelector(`[data-id="${cardId}"]`);
+    if (el) el.classList.add('dragging');
+  }, 0);
+}
+
+function onDragEnd(e) {
+  document.querySelectorAll('.pkg-card.dragging').forEach(el => el.classList.remove('dragging'));
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  dragData = null;
+}
+
+function wireDropZone(el) {
+  el.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    el.classList.add('drag-over');
+  });
+  el.addEventListener('dragleave', e => {
+    if (!el.contains(e.relatedTarget)) el.classList.remove('drag-over');
+  });
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    el.classList.remove('drag-over');
+    const cardId = e.dataTransfer.getData('text/plain');
+    if (!cardId) return;
+    const toZone = el.dataset.zone;
+    const found  = findCard(cardId);
+    if (!found) return;
+    if (found.zone === toZone) return; // same zone — no-op
+    removeFromZone(cardId, found.zone);
+    addToZone(found.card, toZone);
+    render();
+  });
+}
+
+// ── Add / Remove ───────────────────────────────────────────────
+function removeCard(id) {
+  const found = findCard(id);
+  if (!found) return;
+  removeFromZone(id, found.zone);
+  render();
+}
+
+function clearAll() {
+  if (!confirm('Clear all products from the schedule?')) return;
+  schedule.pool = [];
+  for (let i = 1; i <= 12; i++) schedule.lines[i] = [];
+  render();
+}
+
+// ── Modal ──────────────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('m-sku').value   = '';
+  document.getElementById('m-batch').value = '';
+  document.getElementById('m-lbs').value   = '';
+  document.getElementById('m-days').value  = '';
+  document.getElementById('m-error').style.display = 'none';
+  document.getElementById('add-modal').classList.add('active');
+  document.getElementById('m-sku').focus();
+}
+function closeAddModal() {
+  document.getElementById('add-modal').classList.remove('active');
+}
+function submitAdd() {
+  const sku   = document.getElementById('m-sku').value.trim().toUpperCase();
+  const batch = document.getElementById('m-batch').value.trim();
+  const lbs   = parseFloat(document.getElementById('m-lbs').value);
+  const days  = parseInt(document.getElementById('m-days').value) || 0;
+  const err   = document.getElementById('m-error');
+  if (!sku || !batch || !lbs || lbs <= 0) {
+    err.textContent = 'Please fill in SKU, batch and pounds.';
+    err.style.display = 'block';
+    return;
+  }
+  schedule.pool.push(makeCard(sku, batch, lbs, days));
+  closeAddModal();
+  render();
+}
+
+// ── Clock / Date ───────────────────────────────────────────────
+function tick() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+function setDate() {
+  const d = new Date();
+  document.getElementById('schedule-date').textContent =
+    d.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+}
+
+// ── Close modal on backdrop ────────────────────────────────────
+document.getElementById('add-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddModal();
+});
+
+// ── Keyboard shortcuts ─────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeAddModal();
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (document.getElementById('add-modal').classList.contains('active')) submitAdd();
+  }
+});
+
+// ── Init ───────────────────────────────────────────────────────
+loadSchedule(); // loads local first then fetches GitHub
+setDate();
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
