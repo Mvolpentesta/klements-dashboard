@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rework Cooler — Klement's</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #06101C;
+  --surf:    #0D1824;
+  --surf2:   #121E2D;
+  --border:  #1E3348;
+  --border2: #2A3F58;
+  --text:    #EAF0F8;
+  --muted:   #4A6884;
+  --muted2:  #8BAFC8;
+  --green:   #22C55E;
+  --yellow:  #F59E0B;
+  --red:     #EF4444;
+  --accent:  #F59E0B;
+  --mono:    'Courier New', monospace;
+}
+
+body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:13px; min-height:100vh; }
+
+/* ── Nav ── */
+nav {
+  position:fixed; top:0; left:0; right:0; height:54px;
+  background:var(--bg); border-bottom:1.5px solid var(--border);
+  display:flex; align-items:center; padding:0 20px; gap:14px; z-index:100;
+  box-shadow:0 2px 20px rgba(0,0,0,0.5);
+}
+.nav-brand { font-size:16px; font-weight:900; color:var(--text); }
+.nav-sub   { font-size:11px; color:var(--muted); margin-top:1px; }
+.nav-spacer{ flex:1; }
+#clock { font-size:13px; font-weight:700; color:var(--muted2); font-family:var(--mono); }
+.nav-pill {
+  font-size:10px; font-weight:800; padding:3px 10px; border-radius:20px;
+  letter-spacing:0.05em; border:1px solid rgba(245,158,11,0.4);
+  background:rgba(245,158,11,0.08); color:var(--accent);
+}
+.refresh-btn {
+  padding:6px 14px; border-radius:8px; border:1.5px solid var(--border2);
+  background:transparent; color:var(--muted2); font-size:12px; font-weight:700;
+  cursor:pointer; transition:all 0.15s;
+}
+.refresh-btn:hover { border-color:var(--accent); color:var(--accent); }
+.add-btn {
+  padding:6px 14px; border-radius:8px;
+  border:1.5px solid rgba(245,158,11,0.4);
+  background:rgba(245,158,11,0.08); color:var(--accent);
+  font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s;
+}
+.add-btn:hover { background:rgba(245,158,11,0.15); }
+
+/* ── Layout ── */
+.app { padding-top:70px; display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+
+/* ── Sidebar ── */
+.sidebar {
+  background:var(--surf); border-right:1.5px solid var(--border);
+  padding:16px 12px; position:sticky; top:54px;
+  height:calc(100vh - 54px); overflow-y:auto;
+  scrollbar-width:thin; scrollbar-color:var(--border2) transparent;
+}
+.sidebar-title {
+  font-size:10px; font-weight:800; color:var(--muted);
+  letter-spacing:0.08em; text-transform:uppercase;
+  margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border);
+}
+.summary-tile {
+  background:var(--surf2); border:1.5px solid var(--border);
+  border-radius:10px; padding:12px 14px; margin-bottom:8px;
+}
+.tile-label { font-size:10px; color:var(--muted); font-weight:700; margin-bottom:6px; }
+.tile-value { font-size:22px; font-weight:900; font-family:var(--mono); line-height:1; }
+.tile-unit  { font-size:9px; color:var(--muted); margin-top:2px; }
+
+.legend { margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
+.legend-title { font-size:10px; font-weight:800; color:var(--muted); letter-spacing:0.06em; margin-bottom:8px; }
+.legend-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:11px; color:var(--muted2); }
+.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+.search-wrap { margin-bottom:14px; }
+.search-input {
+  width:100%; padding:8px 12px; border-radius:8px;
+  border:1.5px solid var(--border2); background:var(--surf2);
+  color:var(--text); font-size:12px; outline:none; transition:border-color 0.15s;
+}
+.search-input:focus { border-color:var(--accent); }
+
+/* ── Main grid ── */
+.main { padding:20px; }
+.grid-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px; flex-wrap:wrap; gap:10px;
+}
+.grid-title { font-size:18px; font-weight:900; color:var(--text); }
+.grid-sub   { font-size:11px; color:var(--muted); margin-top:2px; }
+.sort-btns  { display:flex; gap:6px; }
+.sort-btn {
+  padding:5px 12px; border-radius:7px; border:1.5px solid var(--border2);
+  background:transparent; color:var(--muted); font-size:11px; font-weight:700;
+  cursor:pointer; transition:all 0.15s;
+}
+.sort-btn.active, .sort-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(245,158,11,0.06); }
+
+#cooler-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px;
+}
+
+/* ── Product card ── */
+.rw-card {
+  background:var(--surf2); border:1.5px solid var(--border);
+  border-radius:12px; padding:14px 16px; position:relative;
+  transition:transform 0.1s, box-shadow 0.1s;
+}
+.rw-card:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,0,0,0.4); }
+.card-actions {
+  position:absolute; top:8px; right:8px;
+  display:flex; gap:4px; opacity:0; transition:opacity 0.15s;
+}
+.rw-card:hover .card-actions { opacity:1; }
+.card-btn {
+  width:22px; height:22px; border-radius:5px; border:none;
+  font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s;
+}
+.btn-edit { background:rgba(56,189,248,0.12); color:#38BDF8; }
+.btn-edit:hover { background:rgba(56,189,248,0.25); }
+.btn-del  { background:rgba(239,68,68,0.12); color:#EF4444; }
+.btn-del:hover  { background:rgba(239,68,68,0.25); }
+
+.card-sku    { font-size:16px; font-weight:900; font-family:var(--mono); color:var(--text); margin-bottom:2px; }
+.card-batch  { font-size:10px; color:var(--muted); margin-bottom:10px; }
+.card-lbs    { font-size:24px; font-weight:900; font-family:var(--mono); line-height:1; }
+.card-unit   { font-size:9px; color:var(--muted); margin-top:2px; margin-bottom:10px; }
+.card-age    {
+  display:inline-block; font-size:9px; font-weight:800;
+  padding:3px 8px; border-radius:5px; margin-bottom:8px;
+}
+.card-notes  { font-size:10px; color:var(--muted); font-style:italic; margin-top:6px; border-top:1px solid var(--border); padding-top:6px; }
+.card-entered{ font-size:9px; color:var(--muted); margin-top:4px; }
+
+/* ── Spinner (sausage man) ── */
+@keyframes sm-body  { 0%,100%{transform:rotate(-10deg) translateY(0)} 25%{transform:rotate(8deg) translateY(-8px)} 50%{transform:rotate(-6deg) translateY(-3px)} 75%{transform:rotate(9deg) translateY(-10px)} }
+@keyframes sm-arm-l { 0%,100%{transform:rotate(-40deg)} 50%{transform:rotate(55deg)} }
+@keyframes sm-arm-r { 0%,100%{transform:rotate(40deg)} 50%{transform:rotate(-55deg)} }
+@keyframes sm-leg-l { 0%,100%{transform:rotate(-15deg)} 50%{transform:rotate(35deg)} }
+@keyframes sm-leg-r { 0%,100%{transform:rotate(15deg)} 50%{transform:rotate(-35deg)} }
+@keyframes sm-shadow{ 0%,100%{transform:scaleX(1)} 25%{transform:scaleX(0.8)} 75%{transform:scaleX(0.75)} }
+@keyframes sm-dot   { 0%{opacity:0.2} 33%{opacity:1} 66%{opacity:0.2} 100%{opacity:0.2} }
+.sm-body-g { animation:sm-body  0.95s ease-in-out infinite; transform-origin:340px 230px; }
+.sm-arm-lg { animation:sm-arm-l 0.475s ease-in-out infinite alternate; transform-origin:310px 165px; }
+.sm-arm-rg { animation:sm-arm-r 0.475s ease-in-out infinite alternate; transform-origin:370px 165px; }
+.sm-leg-lg { animation:sm-leg-l 0.475s ease-in-out infinite alternate; transform-origin:325px 225px; }
+.sm-leg-rg { animation:sm-leg-r 0.475s ease-in-out infinite alternate; transform-origin:355px 225px; }
+.sm-shad-g { animation:sm-shadow 0.95s ease-in-out infinite; transform-origin:340px 295px; }
+.sm-dot1   { animation:sm-dot 1.2s ease-in-out infinite 0s; }
+.sm-dot2   { animation:sm-dot 1.2s ease-in-out infinite 0.4s; }
+.sm-dot3   { animation:sm-dot 1.2s ease-in-out infinite 0.8s; }
+.spinner-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; grid-column:1/-1; gap:8px; }
+.spinner-text { font-size:13px; color:var(--muted); font-weight:600; }
+
+/* ── Empty state ── */
+.empty-state { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--muted); }
+.empty-icon  { font-size:48px; margin-bottom:12px; opacity:0.4; }
+.empty-msg   { font-size:14px; font-weight:600; margin-bottom:6px; }
+.empty-sub   { font-size:12px; opacity:0.7; }
+
+/* ── Modal ── */
+.modal-bg {
+  display:none; position:fixed; inset:0; z-index:500;
+  background:rgba(5,12,24,0.9); align-items:center; justify-content:center; padding:20px;
+}
+.modal-bg.open { display:flex; }
+.modal {
+  background:var(--surf2); border:1.5px solid var(--border2);
+  border-radius:16px; width:100%; max-width:380px; padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+.modal-title { font-size:16px; font-weight:900; color:var(--text); margin-bottom:4px; }
+.modal-sub   { font-size:11px; color:var(--muted); margin-bottom:20px; }
+.field { margin-bottom:14px; }
+.field-label { font-size:11px; color:var(--muted); font-weight:700; margin-bottom:5px; }
+.field-input, .field-textarea {
+  width:100%; padding:10px 12px; border-radius:8px;
+  border:1.5px solid var(--border2); background:var(--surf);
+  color:var(--text); font-size:13px; outline:none; transition:border-color 0.15s;
+  font-family:inherit;
+}
+.field-input:focus, .field-textarea:focus { border-color:var(--accent); }
+.field-textarea { resize:vertical; min-height:70px; }
+.modal-error { font-size:11px; color:var(--red); margin-bottom:10px; display:none; }
+.modal-btns { display:flex; gap:10px; margin-top:4px; }
+.btn-cancel {
+  flex:1; padding:10px; border-radius:8px; border:1.5px solid var(--border2);
+  background:transparent; color:var(--muted); font-size:13px; font-weight:700; cursor:pointer;
+}
+.btn-save {
+  flex:1; padding:10px; border-radius:8px; border:none;
+  background:linear-gradient(135deg,var(--accent),#B45309);
+  color:#fff; font-size:13px; font-weight:700; cursor:pointer;
+}
+.btn-save:disabled { opacity:0.5; cursor:not-allowed; }
+
+/* ── Confirm modal ── */
+.confirm-modal {
+  background:var(--surf2); border:1.5px solid rgba(239,68,68,0.4);
+  border-radius:16px; width:100%; max-width:340px; padding:24px;
+}
+
+/* ── Tabs ── */
+.tab-nav {
+  display:flex; gap:6px; margin-bottom:20px;
+  border-bottom:1.5px solid var(--border); padding-bottom:0;
+}
+.tab-btn {
+  padding:8px 18px; border-radius:8px 8px 0 0;
+  border:1.5px solid transparent; border-bottom:none;
+  background:transparent; color:var(--muted);
+  font-size:12px; font-weight:700; cursor:pointer;
+  transition:all 0.15s; margin-bottom:-1.5px;
+}
+.tab-btn.active {
+  background:var(--surf2); border-color:var(--border);
+  border-bottom-color:var(--surf2); color:var(--accent);
+}
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* ── History search ── */
+.hist-search-bar {
+  display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;
+  background:var(--surf2); border:1.5px solid var(--border);
+  border-radius:12px; padding:14px 16px;
+}
+.hist-field { display:flex; flex-direction:column; gap:4px; flex:1; min-width:140px; }
+.hist-label { font-size:10px; font-weight:700; color:var(--muted); }
+.hist-input {
+  padding:8px 12px; border-radius:7px; border:1.5px solid var(--border2);
+  background:var(--surf); color:var(--text); font-size:13px;
+  outline:none; transition:border-color 0.15s;
+}
+.hist-input:focus { border-color:var(--accent); }
+.hist-search-btn {
+  align-self:flex-end; padding:9px 20px; border-radius:7px; border:none;
+  background:linear-gradient(135deg,var(--accent),#B45309);
+  color:#fff; font-size:12px; font-weight:800; cursor:pointer;
+}
+.hist-clear-btn {
+  align-self:flex-end; padding:9px 16px; border-radius:7px;
+  border:1.5px solid var(--border2); background:transparent;
+  color:var(--muted); font-size:12px; font-weight:700; cursor:pointer;
+}
+
+/* ── History results ── */
+.hist-summary {
+  display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;
+}
+.hist-tile {
+  background:var(--surf2); border:1.5px solid var(--border);
+  border-radius:10px; padding:10px 16px; flex:1; min-width:120px;
+}
+.hist-tile-label { font-size:10px; color:var(--muted); font-weight:700; margin-bottom:4px; }
+.hist-tile-value { font-size:20px; font-weight:900; font-family:var(--mono); }
+
+.hist-table-wrap { overflow-x:auto; border-radius:10px; border:1.5px solid var(--border); }
+.hist-table {
+  width:100%; border-collapse:collapse; font-size:12px;
+}
+.hist-table th {
+  background:var(--surf2); padding:10px 14px; text-align:left;
+  font-size:10px; font-weight:800; color:var(--muted);
+  letter-spacing:0.05em; border-bottom:1.5px solid var(--border);
+  cursor:pointer; user-select:none; white-space:nowrap;
+}
+.hist-table th:hover { color:var(--accent); }
+.hist-table td {
+  padding:10px 14px; border-bottom:1px solid var(--border);
+  color:var(--text); vertical-align:middle;
+}
+.hist-table tr:last-child td { border-bottom:none; }
+.hist-table tr:hover td { background:rgba(255,255,255,0.02); }
+.hist-sku { font-family:var(--mono); font-weight:800; font-size:13px; }
+.hist-age-badge {
+  font-size:9px; font-weight:800; padding:2px 7px;
+  border-radius:4px; display:inline-block;
+}
+.hist-empty {
+  text-align:center; padding:40px; color:var(--muted);
+  font-size:13px;
+}
+.export-btn {
+  padding:6px 14px; border-radius:7px; border:1.5px solid var(--border2);
+  background:transparent; color:var(--muted); font-size:11px;
+  font-weight:700; cursor:pointer; transition:all 0.15s;
+}
+.export-btn:hover { border-color:var(--green); color:var(--green); }
+
+/* ── Drag drop zones ── */
+.drop-overlay {
+  display:none; position:fixed; inset:0; z-index:300;
+  background:rgba(6,16,28,0.7); backdrop-filter:blur(4px);
+}
+.drop-overlay.active { display:flex; align-items:flex-end; justify-content:center; gap:40px; padding-bottom:60px; }
+.drop-zone {
+  width:160px; height:160px; border-radius:24px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:8px; border:2.5px dashed; transition:all 0.2s;
+  animation:zoneIn 0.25s ease-out; cursor:default;
+}
+@keyframes zoneIn { from{opacity:0;transform:scale(0.8) translateY(30px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.drop-zone-dispose { background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.45); color:#EF4444; }
+.drop-zone-dispose.drag-over { background:rgba(239,68,68,0.25); border-color:#EF4444; transform:scale(1.08); box-shadow:0 0 40px rgba(239,68,68,0.35); }
+.drop-zone-consume { background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.45); color:#F59E0B; }
+.drop-zone-consume.drag-over { background:rgba(245,158,11,0.25); border-color:#F59E0B; transform:scale(1.08); box-shadow:0 0 40px rgba(245,158,11,0.35); }
+.drop-zone-icon  { font-size:48px; line-height:1; }
+.drop-zone-label { font-size:12px; font-weight:800; letter-spacing:0.04em; }
+.drop-zone-hint  { font-size:10px; opacity:0.65; }
+.rw-card.is-dragging { opacity:0.3; }
+
+/* ── Consume modal ── */
+.consume-modal {
+  background:var(--surf2); border:1.5px solid rgba(245,158,11,0.4);
+  border-radius:16px; width:100%; max-width:400px; padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+}
+.consume-from {
+  background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.2);
+  border-radius:10px; padding:10px 14px; margin-bottom:16px;
+  display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;
+}
+
+/* ── Dispose confirm ── */
+.dispose-modal {
+  background:var(--surf2); border:1.5px solid rgba(239,68,68,0.4);
+  border-radius:16px; width:100%; max-width:360px; padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+}
+.dispose-icon-wrap { font-size:48px; text-align:center; margin-bottom:12px; animation:wobble 0.5s ease-in-out; }
+@keyframes wobble { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-12deg)} 75%{transform:rotate(12deg)} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div>
+    <div class="nav-brand">♻️ Rework Cooler</div>
+    <div class="nav-sub">Klement's Sausage Co.</div>
+  </div>
+  <div class="nav-spacer"></div>
+  <span id="clock"></span>
+  <button class="refresh-btn" onclick="loadCooler()">↻ Refresh</button>
+  <button class="add-btn" onclick="openAddModal()">+ Add Item</button>
+  <span class="nav-pill">LIVE</span>
+</nav>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-title">Summary</div>
+
+    <div class="summary-tile">
+      <div class="tile-label">Total Items</div>
+      <div style="display:flex;align-items:baseline;gap:8px;">
+        <div class="tile-value" id="sum-items">—</div>
+        <span id="sum-items-arrow" style="font-size:16px;font-weight:900;display:none;"></span>
+      </div>
+      <div class="tile-unit">products in rework</div>
+    </div>
+    <div class="summary-tile">
+      <div class="tile-label">Total Lbs</div>
+      <div style="display:flex;align-items:baseline;gap:8px;">
+        <div class="tile-value" id="sum-lbs">—</div>
+        <span id="sum-lbs-arrow" style="font-size:16px;font-weight:900;display:none;"></span>
+      </div>
+      <div class="tile-unit">lbs in cooler</div>
+    </div>
+    <div class="summary-tile">
+      <div class="tile-label">Oldest Item</div>
+      <div class="tile-value" id="sum-oldest">—</div>
+      <div class="tile-unit">days in cooler</div>
+    </div>
+    <div class="summary-tile">
+      <div class="tile-label">Needs Attention</div>
+      <div class="tile-value" id="sum-alert" style="color:var(--red);">—</div>
+      <div class="tile-unit">items 21+ days</div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-title">Age Guide</div>
+      <div class="legend-row"><div class="legend-dot" style="background:var(--green);"></div>0 – 14 days</div>
+      <div class="legend-row"><div class="legend-dot" style="background:var(--yellow);"></div>15 – 20 days</div>
+      <div class="legend-row"><div class="legend-dot" style="background:var(--red);"></div>21+ days</div>
+    </div>
+
+    <div class="legend" style="margin-top:12px;">
+      <div class="legend-title">Search Cooler</div>
+      <div class="search-wrap">
+        <input class="search-input" id="search-input" type="text"
+          placeholder="Product or batch..." oninput="filterGrid(this.value)">
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Tabs -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('current',this)">Current Inventory</button>
+      <button class="tab-btn" onclick="switchTab('history',this)">History Search</button>
+    </div>
+
+    <!-- Current Inventory Tab -->
+    <div class="tab-panel active" id="tab-current">
+      <div class="grid-header">
+        <div>
+          <div class="grid-title">Rework Inventory</div>
+          <div class="grid-sub" id="last-updated">Loading...</div>
+        </div>
+        <div class="sort-btns">
+          <button class="sort-btn active" onclick="setSort('age',this)">Oldest First</button>
+          <button class="sort-btn" onclick="setSort('lbs',this)">Most Lbs</button>
+          <button class="sort-btn" onclick="setSort('sku',this)">By SKU</button>
+        </div>
+      </div>
+      <div id="cooler-grid"><div class="spinner-wrap"><div class="spinner-text">Loading...</div></div></div>
+    </div>
+
+    <!-- History Tab -->
+    <div class="tab-panel" id="tab-history">
+      <div class="grid-header">
+        <div>
+          <div class="grid-title">History Search</div>
+          <div class="grid-sub">Search all rework entries by product, batch, lbs or date range</div>
+        </div>
+        <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+
+      <div class="hist-search-bar">
+        <div class="hist-field">
+          <div class="hist-label">Product / SKU</div>
+          <input class="hist-input" id="h-sku" placeholder="e.g. 66910">
+        </div>
+        <div class="hist-field">
+          <div class="hist-label">Batch / Lot</div>
+          <input class="hist-input" id="h-batch" placeholder="e.g. 92037">
+        </div>
+        <div class="hist-field">
+          <div class="hist-label">Min Lbs</div>
+          <input class="hist-input" id="h-minlbs" type="number" placeholder="0">
+        </div>
+        <div class="hist-field">
+          <div class="hist-label">Max Lbs</div>
+          <input class="hist-input" id="h-maxlbs" type="number" placeholder="Any">
+        </div>
+        <div class="hist-field">
+          <div class="hist-label">Date From</div>
+          <input class="hist-input" id="h-from" type="date">
+        </div>
+        <div class="hist-field">
+          <div class="hist-label">Date To</div>
+          <input class="hist-input" id="h-to" type="date">
+        </div>
+        <button class="hist-search-btn" onclick="runHistSearch()">Search</button>
+        <button class="hist-clear-btn" onclick="clearHistSearch()">Clear</button>
+      </div>
+
+      <div class="hist-summary" id="hist-summary" style="display:none;">
+        <div class="hist-tile"><div class="hist-tile-label">Results</div><div class="hist-tile-value" id="h-count">0</div></div>
+        <div class="hist-tile"><div class="hist-tile-label">Original Lbs</div><div class="hist-tile-value" id="h-total-lbs">0</div></div>
+        <div class="hist-tile"><div class="hist-tile-label">Consumed Lbs</div><div class="hist-tile-value" id="h-consumed-lbs" style="color:#22C55E;">0</div></div>
+        <div class="hist-tile"><div class="hist-tile-label">Avg Lbs</div><div class="hist-tile-value" id="h-avg-lbs">0</div></div>
+        <div class="hist-tile"><div class="hist-tile-label">Unique SKUs</div><div class="hist-tile-value" id="h-skus">0</div></div>
+      </div>
+
+      <div id="hist-results"><div class="hist-empty">Enter search criteria above and click Search</div></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Drop Overlay — appears when dragging a card -->
+<div class="drop-overlay" id="drop-overlay">
+  <div class="drop-zone drop-zone-dispose" id="zone-dispose"
+    ondragover="event.preventDefault();this.classList.add('drag-over')"
+    ondragleave="this.classList.remove('drag-over')"
+    ondrop="onDropDispose(event)">
+    <div class="drop-zone-icon">🗑️</div>
+    <div class="drop-zone-label">DISPOSE</div>
+    <div class="drop-zone-hint">Drop to throw away</div>
+  </div>
+  <div class="drop-zone drop-zone-consume" id="zone-consume"
+    ondragover="event.preventDefault();this.classList.add('drag-over')"
+    ondragleave="this.classList.remove('drag-over')"
+    ondrop="onDropConsume(event)">
+    <div class="drop-zone-icon">♻️</div>
+    <div class="drop-zone-label">CONSUME</div>
+    <div class="drop-zone-hint">Drop to use in a batch</div>
+  </div>
+</div>
+
+<!-- Dispose Confirm Modal -->
+<div class="modal-bg" id="dispose-modal">
+  <div class="dispose-modal">
+    <div class="dispose-icon-wrap">🗑️</div>
+    <div style="font-size:16px;font-weight:900;color:#EF4444;margin-bottom:6px;">Dispose Item?</div>
+    <div style="font-size:13px;color:var(--muted2);margin-bottom:6px;">
+      You are about to permanently dispose of:
+    </div>
+    <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:12px 14px;margin-bottom:20px;">
+      <div style="font-size:16px;font-weight:900;font-family:monospace;color:var(--text);" id="dispose-sku-label"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="dispose-detail-label"></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">This item will be <strong style="color:#22C55E;">saved in history</strong> as disposed — it will no longer appear in the active cooler but you can always find it in the History Search tab.</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeDisposeModal()">Cancel — Keep It</button>
+      <button class="btn-save" style="background:linear-gradient(135deg,#EF4444,#B91C1C);" onclick="confirmDispose()">Yes, Dispose</button>
+    </div>
+  </div>
+</div>
+
+<!-- Consume Modal -->
+<div class="modal-bg" id="consume-modal">
+  <div class="consume-modal">
+    <div style="font-size:16px;font-weight:900;color:var(--accent);margin-bottom:4px;">♻️ Consume Rework</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Enter what this rework is being added into</div>
+    <div class="consume-from">
+      <div>
+        <div style="font-size:10px;color:var(--muted);font-weight:700;">From Rework</div>
+        <div style="font-size:15px;font-weight:900;font-family:monospace;color:var(--accent);" id="consume-from-sku"></div>
+        <div style="font-size:11px;color:var(--muted2);" id="consume-from-batch"></div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;">Available</div>
+        <div style="font-size:18px;font-weight:900;font-family:monospace;color:var(--accent);" id="consume-available"></div>
+        <div style="font-size:10px;color:var(--muted);">lbs remaining</div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Pounds Being Consumed</div>
+      <input class="field-input" id="consume-lbs" type="number" placeholder="e.g. 200" min="1">
+    </div>
+    <div class="field">
+      <div class="field-label">Into Product / SKU</div>
+      <input class="field-input" id="consume-into-sku" placeholder="e.g. 66920">
+    </div>
+    <div class="field">
+      <div class="field-label">Into Batch / Lot</div>
+      <input class="field-input" id="consume-into-batch" placeholder="e.g. 92051">
+    </div>
+    <div class="field">
+      <div class="field-label">Notes (optional)</div>
+      <input class="field-input" id="consume-notes" placeholder="e.g. Added to morning batch">
+    </div>
+    <div class="modal-error" id="consume-error"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeConsumeModal()">Cancel</button>
+      <button class="btn-save" onclick="confirmConsume()">Confirm Consumption</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="add-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Add to Rework</div>
+    <div class="modal-sub" id="modal-sub">New item will be added to the rework cooler</div>
+    <div class="field">
+      <div class="field-label">Product / SKU</div>
+      <input class="field-input" id="m-sku" placeholder="e.g. 66910">
+    </div>
+    <div class="field">
+      <div class="field-label">Batch / Lot</div>
+      <input class="field-input" id="m-batch" placeholder="e.g. 92037">
+    </div>
+    <div class="field">
+      <div class="field-label">Pounds (LBS)</div>
+      <input class="field-input" id="m-lbs" type="number" placeholder="e.g. 500">
+    </div>
+    <div class="field">
+      <div class="field-label">Date Entered (MM/DD/YYYY)</div>
+      <input class="field-input" id="m-date" placeholder="e.g. 09/01/2026">
+    </div>
+    <div class="field">
+      <div class="field-label">Reason for Rework</div>
+      <select class="field-input" id="m-reason" style="cursor:pointer;">
+        <option value="">— Select reason —</option>
+        <option value="Color">Color</option>
+        <option value="Underweight">Underweight</option>
+        <option value="Grease Out">Grease Out</option>
+        <option value="High PH">High PH</option>
+        <option value="Wrinkles">Wrinkles</option>
+        <option value="No Twist">No Twist</option>
+        <option value="Peeler Damage">Peeler Damage</option>
+        <option value="Damaged">Damaged</option>
+        <option value="Size">Size</option>
+        <option value="Cut Ends">Cut Ends</option>
+        <option value="Air Pockets">Air Pockets</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="field-label">Notes</div>
+      <textarea class="field-textarea" id="m-notes" placeholder="Optional notes..."></textarea>
+    </div>
+    <div class="modal-error" id="m-error"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-save" id="m-save-btn" onclick="submitModal()">Add to Rework</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal-bg" id="confirm-modal">
+  <div class="confirm-modal">
+    <div class="modal-title" style="color:var(--red);">Remove Item</div>
+    <div style="font-size:13px;color:var(--muted2);margin:12px 0 20px;">
+      Remove <strong id="confirm-sku" style="color:var(--text);"></strong> from the rework cooler?
+      This cannot be undone.
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-save" style="background:linear-gradient(135deg,#EF4444,#B91C1C);" onclick="confirmDelete()">Remove</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Azure Blob Storage ─────────────────────────────────────────
+const BLOB_BASE = 'https://klementsstorage1.blob.core.windows.net';
+const CONTAINER = 'schedule';
+const BLOB_FILE = 'rework_cooler.json';
+const SAS       = '?sv=2026-02-06&ss=b&srt=co&sp=rwactfx&se=2027-09-02T07:10:34Z&spr=https&sig=D0MIXOWd7P1Wm4%2B4kpFsPJ%2BvHI92G0tgmmiv27F7QnI%3D';
+const BLOB_URL  = `${BLOB_BASE}/${CONTAINER}/${BLOB_FILE}${SAS}`;
+
+// ── State ─────────────────────────────────────────────────────
+let items        = [];   // current rework items
+let historyItems = [];   // disposed/fully consumed items
+let sortMode     = 'age';
+let editingId    = null;
+let deleteId     = null;
+let dragItemId   = null; // id of card being dragged
+let pendingDisposeId  = null;
+let pendingConsumeId  = null;
+let prevItems = null; // previous item count for trend
+let prevLbs   = null; // previous total lbs for trend
+
+// ── Helpers ───────────────────────────────────────────────────
+function makeId() { return 'rw' + Date.now() + Math.random().toString(36).slice(2,6); }
+
+function parseDate(str) {
+  if (!str) return null;
+  const mdy = String(str).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (mdy) return new Date(parseInt(mdy[3]), parseInt(mdy[1])-1, parseInt(mdy[2]), 12, 0, 0);
+  const d = new Date(str);
+  return isNaN(d) ? null : d;
+}
+
+function daysInCooler(dateStr) {
+  const d = parseDate(dateStr);
+  if (!d) return 0;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function cardColors(days) {
+  if (days <= 14) return { accent:'#22C55E', bg:'rgba(34,197,94,0.08)',  border:'rgba(34,197,94,0.3)'  };
+  if (days <= 20) return { accent:'#F59E0B', bg:'rgba(245,158,11,0.08)', border:'rgba(245,158,11,0.3)' };
+  return              { accent:'#EF4444', bg:'rgba(239,68,68,0.08)',   border:'rgba(239,68,68,0.3)'  };
+}
+
+function ageLabel(days) {
+  if (days === 0) return 'Today';
+  return days + 'd in cooler';
+}
+
+function todayStr() {
+  const d = new Date();
+  return String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0') + '/' + d.getFullYear();
+}
+
+// ── Blob save/load ─────────────────────────────────────────────
+async function blobLoad() {
+  try {
+    const res = await fetch(BLOB_URL, { method:'GET' });
+    if (res.status === 404) { items = []; historyItems = []; return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      // Legacy format — plain array
+      items = data.filter(i => i.status !== 'disposed' && i.status !== 'consumed');
+      historyItems = data.filter(i => i.status === 'disposed' || i.status === 'consumed');
+    } else {
+      items        = data.items        || [];
+      historyItems = data.historyItems || [];
+    }
+    console.log('Loaded', items.length, 'active,', historyItems.length, 'history');
+  } catch(e) {
+    console.warn('Blob load failed:', e.message);
+    try { const s=localStorage.getItem('kl_rework'); if(s){ const d=JSON.parse(s); items=d.items||d||[]; historyItems=d.historyItems||[]; } } catch(e2){}
+  }
+}
+
+async function blobSave() {
+  const payload = { items, historyItems };
+  try { localStorage.setItem('kl_rework', JSON.stringify(payload)); } catch(e){}
+  try {
+    const res = await fetch(BLOB_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type':'application/json', 'x-ms-blob-type':'BlockBlob' },
+      body: JSON.stringify(payload, null, 2)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    console.log('Rework cooler saved to blob');
+  } catch(e) { console.warn('Blob save failed:', e.message); }
+}
+
+// ── Load cooler ────────────────────────────────────────────────
+async function loadCooler() {
+  showSpinner();
+  await blobLoad();
+  render();
+  document.getElementById('last-updated').textContent =
+    'Last updated: ' + new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function render() {
+  const grid   = document.getElementById('cooler-grid');
+  const search = document.getElementById('search-input').value.trim().toLowerCase();
+
+  // Sort
+  let sorted = [...items];
+  if (sortMode === 'age')  sorted.sort((a,b) => daysInCooler(b.date) - daysInCooler(a.date)); // oldest first
+  if (sortMode === 'lbs')  sorted.sort((a,b) => (b.lbs||0) - (a.lbs||0));
+  if (sortMode === 'sku')  sorted.sort((a,b) => (a.sku||'').localeCompare(b.sku||''));
+
+  // Filter
+  const filtered = search
+    ? sorted.filter(i => (i.sku||'').toLowerCase().includes(search) || (i.batch||'').toLowerCase().includes(search))
+    : sorted;
+
+  // Summary
+  const totalLbs  = items.reduce((s,i) => s + Math.max(0, parseFloat(i.originalLbs||i.lbs||0) - parseFloat(i.consumedLbs||0)), 0);
+  const maxDays   = items.length ? Math.max(...items.map(i => daysInCooler(i.date))) : 0;
+  const alertCount= items.filter(i => daysInCooler(i.date) >= 21).length;
+
+  // Trend arrows — up is red (bad), down is green (good)
+  function setArrow(arrowId, current, previous) {
+    const el = document.getElementById(arrowId);
+    if (!el || previous === null) { if(el) el.style.display='none'; return; }
+    if (current > previous)      { el.textContent='▲'; el.style.color='#EF4444'; el.style.display='inline'; }
+    else if (current < previous) { el.textContent='▼'; el.style.color='#22C55E'; el.style.display='inline'; }
+    else                         { el.style.display='none'; }
+  }
+  setArrow('sum-items-arrow', items.length, prevItems);
+  setArrow('sum-lbs-arrow',   Math.round(totalLbs), prevLbs !== null ? Math.round(prevLbs) : null);
+  prevItems = items.length;
+  prevLbs   = totalLbs;
+
+  document.getElementById('sum-items').textContent  = items.length;
+  document.getElementById('sum-lbs').textContent    = Math.round(totalLbs).toLocaleString();
+  document.getElementById('sum-oldest').textContent = maxDays;
+  document.getElementById('sum-alert').textContent  = alertCount;
+
+  // Cards
+  if (!filtered.length) {
+    grid.innerHTML = search
+      ? '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-msg">No results</div><div class="empty-sub">Try a different product or batch number</div></div>'
+      : '<div class="empty-state"><div class="empty-icon">♻️</div><div class="empty-msg">Rework cooler is empty</div><div class="empty-sub">Add items using the button above</div></div>';
+    return;
+  }
+
+  grid.innerHTML = '';
+  filtered.forEach(item => {
+    const days     = daysInCooler(item.date);
+    const c        = cardColors(days);
+    const origLbs  = parseFloat(item.originalLbs || item.lbs || 0);
+    const consumed = parseFloat(item.consumedLbs  || 0);
+    const balance  = Math.max(0, origLbs - consumed);
+    const card = document.createElement('div');
+    card.className = 'rw-card';
+    card.dataset.id = item.id;
+    card.style.borderColor = c.border;
+    card.style.background  = c.bg;
+    card.draggable = true;
+    card.innerHTML = `
+      <div class="card-actions">
+        <button class="card-btn btn-edit" onclick="openEditModal('${item.id}')" title="Edit">✏️</button>
+        <button class="card-btn btn-del"  onclick="openConfirm('${item.id}')"   title="Remove">✕</button>
+      </div>
+      <div class="card-sku">${item.sku}</div>
+      <div class="card-batch">Batch: ${item.batch}</div>
+      ${item.reason ? `<div style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:6px;background:${c.accent}18;color:${c.accent};border:1px solid ${c.accent}33;">${item.reason}</div>` : ''}
+      <div class="card-lbs" style="color:${c.accent}">${Math.round(balance).toLocaleString()}</div>
+      <div class="card-unit">lbs remaining</div>
+      <span class="card-age" style="background:${c.accent}22;color:${c.accent};border:1px solid ${c.accent}44;">${ageLabel(days)}</span>
+      ${item.notes ? `<div class="card-notes">${item.notes}</div>` : ''}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:6px;border-top:1px solid ${c.border};">
+        <div style="font-size:9px;color:var(--muted);">Entered: ${item.date||'—'}</div>
+        ${consumed > 0 ? `<div style="font-size:9px;color:#22C55E;font-weight:700;">♻ ${Math.round(consumed).toLocaleString()} lbs used</div>` : ''}
+      </div>`;
+    card.addEventListener('dragstart', e => {
+      dragItemId = item.id;
+      e.dataTransfer.setData('text/plain', item.id);
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => { card.classList.add('is-dragging'); showDropOverlay(); }, 0);
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('is-dragging');
+      hideDropOverlay();
+      dragItemId = null;
+    });
+    grid.appendChild(card);
+  });
+}
+
+function showSpinner() {
+  document.getElementById('cooler-grid').innerHTML = `
+    <div class="spinner-wrap">
+      <svg width="180" height="145" viewBox="140 60 400 240" xmlns="http://www.w3.org/2000/svg">
+        <g class="sm-shad-g"><ellipse cx="340" cy="295" rx="38" ry="7" fill="#1a1a1a" opacity="0.22"/></g>
+        <rect x="370" y="62" width="120" height="40" rx="10" fill="white" stroke="#ddd" stroke-width="1"/>
+        <polygon points="378,102 390,102 383,114" fill="white" stroke="#ddd" stroke-width="1"/>
+        <polygon points="379,101 391,101 384,112" fill="white"/>
+        <text x="380" y="82" font-size="13" font-weight="500" fill="#555" font-family="sans-serif">Loading</text>
+        <text class="sm-dot1" x="432" y="82" font-size="13" font-weight="700" fill="#F59E0B" font-family="sans-serif">.</text>
+        <text class="sm-dot2" x="440" y="82" font-size="13" font-weight="700" fill="#F59E0B" font-family="sans-serif">.</text>
+        <text class="sm-dot3" x="448" y="82" font-size="13" font-weight="700" fill="#F59E0B" font-family="sans-serif">.</text>
+        <g class="sm-body-g">
+          <g class="sm-leg-lg"><ellipse cx="325" cy="252" rx="9" ry="22" fill="#B5541F"/><ellipse cx="320" cy="272" rx="13" ry="5" fill="#2C1A0E"/></g>
+          <g class="sm-leg-rg"><ellipse cx="355" cy="252" rx="9" ry="22" fill="#B5541F"/><ellipse cx="360" cy="272" rx="13" ry="5" fill="#2C1A0E"/></g>
+          <g class="sm-arm-lg"><ellipse cx="302" cy="176" rx="7" ry="21" fill="#C8612A" transform="rotate(-15 302 176)"/><circle cx="296" cy="194" r="6" fill="#D4845A"/></g>
+          <g class="sm-arm-rg"><ellipse cx="378" cy="176" rx="7" ry="21" fill="#C8612A" transform="rotate(15 378 176)"/><circle cx="384" cy="194" r="6" fill="#D4845A"/></g>
+          <ellipse cx="340" cy="192" rx="26" ry="52" fill="#C8612A"/>
+          <ellipse cx="340" cy="192" rx="19" ry="44" fill="#D4744A"/>
+          <circle cx="331" cy="114" r="5" fill="white"/><circle cx="349" cy="114" r="5" fill="white"/>
+          <circle cx="332" cy="115" r="3" fill="#1a0a00"/><circle cx="350" cy="115" r="3" fill="#1a0a00"/>
+          <path d="M331 124 Q340 132 349 124" stroke="#7A3A10" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <ellipse cx="340" cy="119" rx="25" ry="22" fill="#E8976A"/>
+          <rect x="318" y="94" width="44" height="3" rx="1" fill="#F59E0B"/>
+          <circle cx="358" cy="76" r="9" fill="#D97706"/>
+          <text x="358" y="80" text-anchor="middle" font-size="10" font-weight="700" fill="white" font-family="sans-serif">K</text>
+        </g>
+      </svg>
+      <div class="spinner-text">Loading rework inventory...</div>
+    </div>`;
+}
+
+// ── Sort ───────────────────────────────────────────────────────
+function setSort(mode, btn) {
+  sortMode = mode;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+// ── Filter ─────────────────────────────────────────────────────
+function filterGrid(q) { render(); }
+
+// ── Add Modal ──────────────────────────────────────────────────
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Add to Rework';
+  document.getElementById('modal-sub').textContent   = 'New item added to rework cooler';
+  document.getElementById('m-save-btn').textContent  = 'Add to Rework';
+  document.getElementById('m-sku').value    = '';
+  document.getElementById('m-batch').value  = '';
+  document.getElementById('m-lbs').value    = '';
+  document.getElementById('m-date').value   = todayStr();
+  document.getElementById('m-reason').value = '';
+  document.getElementById('m-notes').value  = '';
+  document.getElementById('m-error').style.display = 'none';
+  document.getElementById('add-modal').classList.add('open');
+  document.getElementById('m-sku').focus();
+}
+
+function openEditModal(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Edit Item';
+  document.getElementById('modal-sub').textContent   = 'Update rework cooler entry';
+  document.getElementById('m-save-btn').textContent  = 'Save Changes';
+  document.getElementById('m-sku').value    = item.sku    || '';
+  document.getElementById('m-batch').value  = item.batch  || '';
+  document.getElementById('m-lbs').value    = item.lbs    || '';
+  document.getElementById('m-date').value   = item.date   || todayStr();
+  document.getElementById('m-reason').value = item.reason || '';
+  document.getElementById('m-notes').value  = item.notes  || '';
+  document.getElementById('m-error').style.display = 'none';
+  document.getElementById('add-modal').classList.add('open');
+  document.getElementById('m-sku').focus();
+}
+
+function closeAddModal() { document.getElementById('add-modal').classList.remove('open'); }
+
+async function submitModal() {
+  const sku    = document.getElementById('m-sku').value.trim().toUpperCase();
+  const batch  = document.getElementById('m-batch').value.trim();
+  const lbs    = parseFloat(document.getElementById('m-lbs').value);
+  const date   = document.getElementById('m-date').value.trim();
+  const reason = document.getElementById('m-reason').value;
+  const notes  = document.getElementById('m-notes').value.trim();
+  const err    = document.getElementById('m-error');
+
+  if (!sku || !batch || !lbs || lbs <= 0 || !date) {
+    err.textContent = 'Please fill in SKU, batch, pounds and date.';
+    err.style.display = 'block'; return;
+  }
+  if (!reason) {
+    err.textContent = 'Please select a reason for rework.';
+    err.style.display = 'block'; return;
+  }
+
+  const btn = document.getElementById('m-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  if (editingId) {
+    const idx = items.findIndex(i => i.id === editingId);
+    if (idx >= 0) items[idx] = { ...items[idx], sku, batch, lbs, date, reason, notes };
+  } else {
+    items.push({ id:makeId(), sku, batch, lbs, originalLbs:lbs, consumedLbs:0, date, reason, notes, addedAt:new Date().toISOString() });
+  }
+
+  await blobSave();
+  closeAddModal();
+  render();
+  btn.disabled = false;
+  btn.textContent = editingId ? 'Save Changes' : 'Add to Rework';
+}
+
+// ── Delete ─────────────────────────────────────────────────────
+function openConfirm(id) {
+  deleteId = id;
+  const item = items.find(i => i.id === id);
+  document.getElementById('confirm-sku').textContent = item ? `${item.sku} / Batch ${item.batch}` : id;
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm() { document.getElementById('confirm-modal').classList.remove('open'); deleteId = null; }
+async function confirmDelete() {
+  if (!deleteId) return;
+  items = items.filter(i => i.id !== deleteId);
+  closeConfirm();
+  await blobSave();
+  render();
+}
+
+// ── Tab switching ──────────────────────────────────────────────
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ── History search ─────────────────────────────────────────────
+let histSortCol = 'date';
+let histSortDir = -1; // -1 = desc
+let lastResults = [];
+
+function runHistSearch() {
+  const sku    = document.getElementById('h-sku').value.trim().toLowerCase();
+  const batch  = document.getElementById('h-batch').value.trim().toLowerCase();
+  const minLbs = parseFloat(document.getElementById('h-minlbs').value) || 0;
+  const maxLbs = parseFloat(document.getElementById('h-maxlbs').value) || Infinity;
+  const from   = document.getElementById('h-from').value ? new Date(document.getElementById('h-from').value) : null;
+  const to     = document.getElementById('h-to').value   ? new Date(document.getElementById('h-to').value + 'T23:59:59') : null;
+
+  // Search all items — current + history (disposed + consumed)
+  let results = [...items.map(i=>({...i,status:'active'})), ...historyItems];
+
+  // Deduplicate by id
+  const seen = new Set();
+  results = results.filter(i => { if (seen.has(i.id)) return false; seen.add(i.id); return true; });
+
+  // Filter
+  results = results.filter(i => {
+    if (sku   && !(i.sku||'').toLowerCase().includes(sku))     return false;
+    if (batch && !(i.batch||'').toLowerCase().includes(batch)) return false;
+    const lbs = parseFloat(i.lbs)||0;
+    if (lbs < minLbs || lbs > maxLbs) return false;
+    if (from || to) {
+      const d = parseDate(i.date);
+      if (!d) return false;
+      if (from && d < from) return false;
+      if (to   && d > to)   return false;
+    }
+    return true;
+  });
+
+  lastResults = results;
+  renderHistResults(results);
+}
+
+function renderHistResults(results) {
+  const summaryEl = document.getElementById('hist-summary');
+  const resultsEl = document.getElementById('hist-results');
+
+  if (!results.length) {
+    summaryEl.style.display = 'none';
+    resultsEl.innerHTML = '<div class="hist-empty">No entries match your search criteria</div>';
+    return;
+  }
+
+  // Summary tiles
+  const totalLbs    = results.reduce((s,i)=>s+parseFloat(i.originalLbs||i.lbs||0),0);
+  const totalConsumed = results.reduce((s,i)=>s+parseFloat(i.consumedLbs||0),0);
+  const uniqueSkus  = new Set(results.map(i=>i.sku)).size;
+  summaryEl.style.display = 'flex';
+  document.getElementById('h-count').textContent        = results.length.toLocaleString();
+  document.getElementById('h-total-lbs').textContent    = Math.round(totalLbs).toLocaleString();
+  document.getElementById('h-consumed-lbs').textContent = Math.round(totalConsumed).toLocaleString();
+  document.getElementById('h-avg-lbs').textContent      = Math.round(totalLbs/results.length).toLocaleString();
+  document.getElementById('h-skus').textContent         = uniqueSkus;
+
+  // Sort
+  results = [...results].sort((a,b) => {
+    let va, vb;
+    if (histSortCol === 'lbs')  { va=parseFloat(a.lbs||0); vb=parseFloat(b.lbs||0); }
+    else if (histSortCol === 'sku')  { va=a.sku||''; vb=b.sku||''; }
+    else if (histSortCol === 'batch'){ va=a.batch||''; vb=b.batch||''; }
+    else { va=a.date||''; vb=b.date||''; }
+    if (va < vb) return histSortDir;
+    if (va > vb) return -histSortDir;
+    return 0;
+  });
+
+  // Table
+  resultsEl.innerHTML = `
+    <div class="hist-table-wrap">
+      <table class="hist-table">
+        <thead>
+          <tr>
+            <th onclick="histSort('sku')">SKU ${histSortCol==='sku'?(histSortDir===-1?'↓':'↑'):''}</th>
+            <th onclick="histSort('batch')">Original Batch ${histSortCol==='batch'?(histSortDir===-1?'↓':'↑'):''}</th>
+            <th onclick="histSort('lbs')">Original Lbs ${histSortCol==='lbs'?(histSortDir===-1?'↓':'↑'):''}</th>
+            <th>Consumed Lbs</th>
+            <th>Remaining Lbs</th>
+            <th>Consumed Into</th>
+            <th>Reason</th>
+            <th onclick="histSort('date')">Date Entered ${histSortCol==='date'?(histSortDir===-1?'↓':'↑'):''}</th>
+            <th>Status</th>
+            <th>Days</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${results.map(i => {
+            const days = daysInCooler(i.date);
+            const c = cardColors(days);
+            return `<tr>
+              <td><span class="hist-sku">${i.sku||'—'}</span></td>
+              <td>${i.batch||'—'}</td>
+              <td style="font-weight:800;font-family:monospace;">${Math.round(parseFloat(i.originalLbs||i.lbs||0)).toLocaleString()}</td>
+              <td style="font-weight:800;font-family:monospace;color:#22C55E;">${Math.round(parseFloat(i.consumedLbs||0)).toLocaleString()}</td>
+              <td style="font-weight:800;font-family:monospace;color:${parseFloat(i.consumedLbs||0)>0?'#F59E0B':'var(--muted2)'};">${Math.round(Math.max(0,parseFloat(i.originalLbs||i.lbs||0)-parseFloat(i.consumedLbs||0))).toLocaleString()}</td>
+              <td style="font-size:10px;">${(i.consumptions&&i.consumptions.length) ? i.consumptions.map(c=>`<div style="white-space:nowrap;"><span style="color:#22C55E;font-weight:700;">${c.intoProduct||''}/${c.intoBatch||''}</span> <span style="color:var(--muted);">${Math.round(c.lbs||0).toLocaleString()} lbs</span></div>`).join('') : '<span style="color:var(--muted);">—</span>'}</td>
+              <td style="font-size:10px;color:var(--muted2);">${i.reason||'—'}</td>
+              <td>${i.date||'—'}</td>
+              <td><span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;${i.status==='disposed'?'background:rgba(239,68,68,0.15);color:#EF4444;':i.status==='consumed'?'background:rgba(34,197,94,0.15);color:#22C55E;':'background:rgba(245,158,11,0.15);color:#F59E0B;'}">${(i.status||'active').toUpperCase()}</span></td>
+              <td><span class="hist-age-badge" style="background:${c.accent}22;color:${c.accent};border:1px solid ${c.accent}44;">${days}d</span></td>
+              <td style="color:#4A6884;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i.notes||''}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function histSort(col) {
+  if (histSortCol === col) histSortDir *= -1;
+  else { histSortCol = col; histSortDir = -1; }
+  renderHistResults(lastResults);
+}
+
+function clearHistSearch() {
+  ['h-sku','h-batch','h-minlbs','h-maxlbs','h-from','h-to'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('hist-summary').style.display = 'none';
+  document.getElementById('hist-results').innerHTML = '<div class="hist-empty">Enter search criteria above and click Search</div>';
+  lastResults = [];
+}
+
+// ── Export CSV ─────────────────────────────────────────────────
+function exportCSV() {
+  const data = lastResults.length ? lastResults : items;
+  if (!data.length) { alert('No data to export'); return; }
+  const headers = ['SKU','Batch','Lbs','Date Entered','Days in Cooler','Notes'];
+  const rows = data.map(i => [
+    i.sku||'', i.batch||'', Math.round(parseFloat(i.lbs)||0),
+    i.date||'', daysInCooler(i.date), (i.notes||'').replace(/,/g,' ')
+  ]);
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'rework_history_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+// ── Drop overlay ───────────────────────────────────────────────
+function showDropOverlay() { document.getElementById('drop-overlay').classList.add('active'); }
+function hideDropOverlay() {
+  document.getElementById('drop-overlay').classList.remove('active');
+  document.getElementById('zone-dispose').classList.remove('drag-over');
+  document.getElementById('zone-consume').classList.remove('drag-over');
+}
+
+// ── Dispose ────────────────────────────────────────────────────
+function onDropDispose(e) {
+  e.preventDefault(); hideDropOverlay();
+  const id = e.dataTransfer.getData('text/plain') || dragItemId;
+  if (!id) return;
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  pendingDisposeId = id;
+  const balance = Math.max(0, parseFloat(item.originalLbs||item.lbs||0) - parseFloat(item.consumedLbs||0));
+  document.getElementById('dispose-sku-label').textContent    = `${item.sku}  —  Batch ${item.batch}`;
+  document.getElementById('dispose-detail-label').textContent = `${Math.round(balance).toLocaleString()} lbs · ${daysInCooler(item.date)} days in cooler`;
+  document.getElementById('dispose-modal').classList.add('open');
+}
+async function confirmDispose() {
+  if (!pendingDisposeId) return;
+  const idx = items.findIndex(i => i.id === pendingDisposeId);
+  if (idx < 0) { closeDisposeModal(); return; }
+  const item = items[idx];
+  historyItems.push({ ...item, status:'disposed', disposedDate:new Date().toISOString(),
+    disposedLbs: Math.max(0, parseFloat(item.originalLbs||item.lbs||0) - parseFloat(item.consumedLbs||0)) });
+  items.splice(idx, 1);
+  closeDisposeModal(); await blobSave(); render();
+}
+function closeDisposeModal() { document.getElementById('dispose-modal').classList.remove('open'); pendingDisposeId = null; }
+
+// ── Consume ────────────────────────────────────────────────────
+function onDropConsume(e) {
+  e.preventDefault(); hideDropOverlay();
+  const id = e.dataTransfer.getData('text/plain') || dragItemId;
+  if (!id) return;
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  pendingConsumeId = id;
+  const balance = Math.max(0, parseFloat(item.originalLbs||item.lbs||0) - parseFloat(item.consumedLbs||0));
+  document.getElementById('consume-from-sku').textContent    = item.sku;
+  document.getElementById('consume-from-batch').textContent  = 'Batch: ' + item.batch;
+  document.getElementById('consume-available').textContent   = Math.round(balance).toLocaleString();
+  ['consume-lbs','consume-into-sku','consume-into-batch','consume-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('consume-error').style.display = 'none';
+  document.getElementById('consume-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('consume-lbs').focus(), 100);
+}
+async function confirmConsume() {
+  const lbs       = parseFloat(document.getElementById('consume-lbs').value);
+  const intoSku   = document.getElementById('consume-into-sku').value.trim().toUpperCase();
+  const intoBatch = document.getElementById('consume-into-batch').value.trim();
+  const notes     = document.getElementById('consume-notes').value.trim();
+  const err       = document.getElementById('consume-error');
+  if (!lbs||lbs<=0)  { err.textContent='Enter a valid pounds amount.'; err.style.display='block'; return; }
+  if (!intoSku)      { err.textContent='Enter the product being added to.'; err.style.display='block'; return; }
+  if (!intoBatch)    { err.textContent='Enter the batch being added to.'; err.style.display='block'; return; }
+  const idx = items.findIndex(i => i.id === pendingConsumeId);
+  if (idx < 0) { closeConsumeModal(); return; }
+  const item    = items[idx];
+  const origLbs = parseFloat(item.originalLbs||item.lbs||0);
+  const consumed= parseFloat(item.consumedLbs||0);
+  const balance = Math.max(0, origLbs - consumed);
+  if (lbs > balance) { err.textContent=`Only ${Math.round(balance).toLocaleString()} lbs available.`; err.style.display='block'; return; }
+  if (!item.consumptions) item.consumptions = [];
+  item.consumptions.push({ date:new Date().toLocaleDateString('en-US'), lbs, intoProduct:intoSku, intoBatch, notes });
+  item.consumedLbs = consumed + lbs;
+  if (!item.originalLbs) item.originalLbs = origLbs;
+  if (Math.round(item.consumedLbs) >= Math.round(origLbs)) {
+    historyItems.push({ ...item, status:'consumed', consumedDate:new Date().toISOString() });
+    items.splice(idx, 1);
+  } else { items[idx] = item; }
+  closeConsumeModal(); await blobSave(); render();
+}
+function closeConsumeModal() { document.getElementById('consume-modal').classList.remove('open'); pendingConsumeId = null; }
+
+function tick() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+
+// ── Keyboard / backdrop ────────────────────────────────────────
+document.getElementById('add-modal').addEventListener('click', e => { if (e.target === document.getElementById('add-modal')) closeAddModal(); });
+document.getElementById('confirm-modal').addEventListener('click', e => { if (e.target === document.getElementById('confirm-modal')) closeConfirm(); });
+document.getElementById('dispose-modal').addEventListener('click', e => { if (e.target === document.getElementById('dispose-modal')) closeDisposeModal(); });
+document.getElementById('consume-modal').addEventListener('click', e => { if (e.target === document.getElementById('consume-modal')) closeConsumeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeAddModal(); closeConfirm(); closeDisposeModal(); closeConsumeModal(); hideDropOverlay(); }
+  if ((e.ctrlKey||e.metaKey) && e.key === 'Enter') {
+    if (document.getElementById('add-modal').classList.contains('open')) submitModal();
+    if (document.getElementById('consume-modal').classList.contains('open')) confirmConsume();
+  }
+});
+
+// ── Init ───────────────────────────────────────────────────────
+loadCooler();
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
